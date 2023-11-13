@@ -25,19 +25,18 @@ build_jobs=$(($(nproc) + 1))
 
 readonly DISK="${1}"
 
-mkfs.ext4 "${DISK}1"
+mkfs.vfat -F 32 "${DISK}1"
 mkfs.ext4 "${DISK}2"
 
-mount "${DISK}1" /mnt/gentoo
-mount -m -o fmask=0077,dmask=0077 /dev/sdd1 /mnt/gentoo/boot
-mount -m "${DISK}2" /mnt/gentoo/home
+mount "${DISK}2" /mnt/gentoo
+mount -m -o fmask=0077,dmask=0077 "${DISK}1" /mnt/gentoo/boot
 
 cd /mnt/gentoo
 wget "${TARBALL_DIR}/${STAGE_FILE}"
 tar xpvf "${STAGE_FILE}" --xattrs-include='*.*' --numeric-owner
 
 cd /root
-\cp -a /root/gentoo-setup-main/{make.conf,package.use,package.license} /mnt/gentoo/etc/portage
+\cp -a /root/gentoo-setup-main/{minimal_make.conf,package.use,package.license} /mnt/gentoo/etc/portage
 
 mkdir /mnt/gentoo/etc/portage/repos.conf
 cp /mnt/gentoo/usr/share/portage/config/repos.conf /mnt/gentoo/etc/portage/repos.conf/gentoo.conf
@@ -54,7 +53,6 @@ mount --make-slave /mnt/gentoo/run
 source /mnt/gentoo/etc/profile
 
 chroot /mnt/gentoo emerge-webrsync
-#chroot /mnt/gentoo emerge --sync --quiet
 chroot /mnt/gentoo emaint sync -a
 chroot /mnt/gentoo eselect news read
 
@@ -83,39 +81,30 @@ chroot /mnt/gentoo dracut --kver "$(uname -r)-gentoo" --no-kernel
 chroot /mnt/gentoo emerge -vuDN @world
 chroot /mnt/gentoo emerge --depclean
 
-BOOT_PARTUUID=$(blkid -s PARTUUID -o value /dev/sdd1)
+BOOT_PARTUUID=$(blkid -s PARTUUID -o value "${DISK}1")
 readonly BOOT_PARTUUID
 
-ROOT_PARTUUID=$(blkid -s PARTUUID -o value "${DISK}1")
+ROOT_PARTUUID=$(blkid -s PARTUUID -o value "${DISK}2")
 readonly ROOT_PARTUUID
-
-HOME_PARTUUID=$(blkid -s PARTUUID -o value "${DISK}2")
-readonly HOME_PARTUUID
 
 FSTAB=$(
   cat << EOF
 PARTUUID=${BOOT_PARTUUID} /boot vfat defaults,noatime,fmask=0077,dmask=0077 0 2
 PARTUUID=${ROOT_PARTUUID} /     ext4 defaults,noatime                       0 1
-PARTUUID=${HOME_PARTUUID} /home ext4 defaults,noatime                       0 2
-
-# ramdisk
-tmpfs /tmp               tmpfs rw,nodev,nosuid,noatime,size=4G,mode=1777                   0 0
-tmpfs /var/tmp/portage   tmpfs rw,nodev,nosuid,noatime,size=8G                             0 0
-tmpfs /home/remon/.cache tmpfs rw,nodev,nosuid,noatime,size=8G,mode=0755,uid=1000,gid=1000 0 0
 EOF
 )
 readonly FSTAB
 
 echo "${FSTAB}" >> /mnt/gentoo/etc/fstab
-echo 'gentoo' > /mnt/gentoo/etc/hostname
+echo 'virtualbox' > /mnt/gentoo/etc/hostname
 
-chroot /mnt/gentoo passwd
 chroot /mnt/gentoo systemd-machine-id-setup
 chroot /mnt/gentoo systemd-firstboot --keymap us
 chroot /mnt/gentoo systemctl preset-all
 
 chroot /mnt/gentoo bootctl install
 
-chroot /mnt/gentoo useradd -m -G wheel -s /bin/bash remon
-chroot /mnt/gentoo passwd remon
+chroot /mnt/gentoo useradd -m -G wheel -s /bin/bash virt
+chroot /mnt/gentoo passwd virt
+chroot /mnt/gentoo passwd
 rm /mnt/gentoo/stage3-*.tar.xz
