@@ -37,9 +37,7 @@ cd /mnt/gentoo
 wget "${TARBALL_DIR}/${STAGE_FILE}"
 tar xpvf "${STAGE_FILE}" --xattrs-include='*.*' --numeric-owner
 
-\cp -a gentoo-setup-main/make.conf /mnt/gentoo/etc/portage
-\cp -a gentoo-setup-main/package.use /mnt/gentoo/etc/portage
-\cp -a gentoo-setup-main/package.license /mnt/gentoo/etc/portage
+\cp -a "/root/${CURRENT_DIR}/{make.conf,package.use,package.license}" /mnt/gentoo/etc/portage
 
 mkdir /mnt/gentoo/etc/portage/repos.conf
 cp /mnt/gentoo/usr/share/portage/config/repos.conf /mnt/gentoo/etc/portage/repos.conf/gentoo.conf
@@ -75,7 +73,7 @@ source /mnt/gentoo/etc/profile
 chroot /mnt/gentoo emerge sys-kernel/{linux-firmware,gentoo-sources,dracut} sys-firmware/intel-microcode
 chroot /mnt/gentoo eselect kernel set 1
 
-cp -a gentoo-setup-main/kernel_config /mnt/gentoo/usr/src/linux/.config
+cp -a "/root/${CURRENT_DIR}/kernel_config" /mnt/gentoo/usr/src/linux/.config
 cd /mnt/gentoo/usr/src/linux
 chroot /mnt/gentoo make -j13
 chroot /mnt/gentoo make modules_install
