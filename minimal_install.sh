@@ -7,13 +7,15 @@ usage() {
 USAGE:
   ${0} <OPTIONS>
 OPTIONS:
-  disk
+  --disk    Path of disk
 EOF
 }
 
-if [[ $# -ne 1 ]]; then
+if [[ $# -ne 2 ]]; then
   usage
   exit 1
+elif [[ "${1}" == '--disk' ]]; then
+  readonly DISK="${2}"
 fi
 
 readonly TARBALL_DIR='https://distfiles.gentoo.org/releases/amd64/autobuilds/current-stage3-amd64-systemd'
@@ -22,8 +24,6 @@ STAGE_FILE=$(curl -sL "${TARBALL_DIR}" | grep 'tar.xz"' | awk -F '"' '{print $8}
 readonly STAGE_FILE
 
 build_jobs=$(($(nproc) + 1))
-
-readonly DISK="${1}"
 
 mkfs.vfat -F 32 "${DISK}1"
 mkfs.ext4 "${DISK}2"

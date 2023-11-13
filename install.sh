@@ -7,13 +7,15 @@ usage() {
 USAGE:
   ${0} <OPTIONS>
 OPTIONS:
-  disk
+  --disk    Path of disk
 EOF
 }
 
-if [[ $# -ne 1 ]]; then
+if [[ $# -ne 2 ]]; then
   usage
   exit 1
+elif [[ "${1}" == '--disk' ]]; then
+  readonly DISK="${2}"
 fi
 
 readonly TARBALL_DIR='https://distfiles.gentoo.org/releases/amd64/autobuilds/current-stage3-amd64-systemd'
@@ -23,10 +25,7 @@ readonly STAGE_FILE
 
 build_jobs=$(($(nproc) + 1))
 
-readonly DISK="${1}"
-
 mkfs.ext4 "${DISK}1"
-mkfs.ext4 "${DISK}2"
 
 mount "${DISK}1" /mnt/gentoo
 mount -m -o fmask=0077,dmask=0077 /dev/sdd1 /mnt/gentoo/boot
@@ -54,12 +53,11 @@ mount --make-slave /mnt/gentoo/run
 source /mnt/gentoo/etc/profile
 
 chroot /mnt/gentoo emerge-webrsync
-#chroot /mnt/gentoo emerge --sync --quiet
 chroot /mnt/gentoo emaint sync -a
 chroot /mnt/gentoo eselect news read
 
-chroot /mnt/gentoo emerge -vuDN @world
-chroot /mnt/gentoo emerge app-editors/neovim
+FEATURES='-ccache' chroot /mnt/gentoo emerge -vuDN @world
+FEATURES='-ccache' chroot /mnt/gentoo emerge app-editors/neovim
 chroot /mnt/gentoo emerge --depclean
 
 chroot /mnt/gentoo ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
@@ -71,7 +69,7 @@ chroot /mnt/gentoo eselect locale set 4
 chroot /mnt/gentoo env-update
 source /mnt/gentoo/etc/profile
 
-chroot /mnt/gentoo emerge sys-kernel/{linux-firmware,gentoo-sources,dracut} sys-firmware/intel-microcode
+FEATURES='-ccache' chroot /mnt/gentoo emerge sys-kernel/{linux-firmware,gentoo-sources,dracut} sys-firmware/intel-microcode
 chroot /mnt/gentoo eselect kernel set 1
 
 cp -a /root/gentoo-setup-main/gentoo_kernel_conf /mnt/gentoo/usr/src/linux/.config
@@ -80,7 +78,7 @@ chroot /mnt/gentoo bash -c 'cd /usr/src/linux && make install'
 
 chroot /mnt/gentoo dracut --kver "$(uname -r)-gentoo" --no-kernel
 
-chroot /mnt/gentoo emerge -vuDN @world
+FEATURES='-ccache' chroot /mnt/gentoo emerge -vuDN @world
 chroot /mnt/gentoo emerge --depclean
 
 BOOT_PARTUUID=$(blkid -s PARTUUID -o value /dev/sdd1)
@@ -109,7 +107,6 @@ readonly FSTAB
 echo "${FSTAB}" >> /mnt/gentoo/etc/fstab
 echo 'gentoo' > /mnt/gentoo/etc/hostname
 
-chroot /mnt/gentoo passwd
 chroot /mnt/gentoo systemd-machine-id-setup
 chroot /mnt/gentoo systemd-firstboot --keymap us
 chroot /mnt/gentoo systemctl preset-all
@@ -118,4 +115,5 @@ chroot /mnt/gentoo bootctl install
 
 chroot /mnt/gentoo useradd -m -G wheel -s /bin/bash remon
 chroot /mnt/gentoo passwd remon
+chroot /mnt/gentoo passwd
 rm /mnt/gentoo/stage3-*.tar.xz
