@@ -56,8 +56,8 @@ chroot /mnt/gentoo emerge-webrsync
 chroot /mnt/gentoo emaint sync -a
 chroot /mnt/gentoo eselect news read
 
-chroot /mnt/gentoo emerge -vuDN @world
-chroot /mnt/gentoo emerge app-editors/neovim
+chroot /mnt/gentoo FEATURES='-ccache' emerge -vuDN @world
+chroot /mnt/gentoo FEATURES='-ccache' emerge app-editors/neovim
 chroot /mnt/gentoo emerge --depclean
 
 chroot /mnt/gentoo ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
@@ -69,7 +69,7 @@ chroot /mnt/gentoo eselect locale set 4
 chroot /mnt/gentoo env-update
 source /mnt/gentoo/etc/profile
 
-chroot /mnt/gentoo emerge sys-kernel/{linux-firmware,gentoo-sources,dracut} sys-firmware/intel-microcode
+chroot /mnt/gentoo FEATURES='-ccache' emerge sys-kernel/{linux-firmware,gentoo-sources,dracut} sys-firmware/intel-microcode
 chroot /mnt/gentoo eselect kernel set 1
 
 cp -a /root/gentoo-setup-main/gentoo_kernel_conf /mnt/gentoo/usr/src/linux/.config
@@ -78,7 +78,7 @@ chroot /mnt/gentoo bash -c 'cd /usr/src/linux && make install'
 
 chroot /mnt/gentoo dracut --kver "$(uname -r)-gentoo" --no-kernel
 
-chroot /mnt/gentoo emerge -vuDN @world
+chroot /mnt/gentoo FEATURES='-ccache' emerge -vuDN @world
 chroot /mnt/gentoo emerge --depclean
 
 BOOT_PARTUUID=$(blkid -s PARTUUID -o value "${DISK}1")
