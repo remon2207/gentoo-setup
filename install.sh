@@ -95,7 +95,10 @@ chroot /mnt/gentoo emaint sync -a
 chroot /mnt/gentoo eselect news read
 
 FEATURES='-ccache' chroot /mnt/gentoo emerge dev-util/ccache
-chroot /mnt/gentoo emerge app-portage/cpuid2cpuflags media-libs/nvidia-vaapi-driver
+chroot /mnt/gentoo emerge app-portage/cpuid2cpuflags
+if [[ "${GPU}" == 'nvidia' ]]; then
+  chroot /mnt/gentoo emerge media-libs/nvidia-vaapi-driver
+fi
 
 CPU_FLAGS=$(chroot /mnt/gentoo cpuid2cpuflags | sed 's/^CPU_FLAGS_X86: //g')
 readonly CPU_FLAGS
@@ -118,6 +121,7 @@ chroot /mnt/gentoo emerge sys-kernel/{linux-firmware,gentoo-sources,dracut} sys-
 chroot /mnt/gentoo eselect kernel set 1
 
 cp -a "${SCRIPT_DIR}/gentoo_kernel_conf" /mnt/gentoo/usr/src/linux/.config
+chroot /mnt/gentoo bash -c "cd /usr/src/linux && make oldconfig"
 chroot /mnt/gentoo bash -c "cd /usr/src/linux && make -j${BUILD_JOBS} && make modules_install && make install"
 chroot /mnt/gentoo dracut --kver "$(uname -r | awk -F '-' '{print $1}')-gentoo" --no-kernel
 
