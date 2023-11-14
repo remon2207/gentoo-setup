@@ -23,7 +23,8 @@ readonly TARBALL_DIR='https://distfiles.gentoo.org/releases/amd64/autobuilds/cur
 STAGE_FILE=$(curl -sL "${TARBALL_DIR}" | grep 'tar.xz"' | awk -F '"' '{print $8}')
 readonly STAGE_FILE
 
-build_jobs=$(($(nproc) + 1))
+BUILD_JOBS=$(($(nproc) + 1))
+readonly BUILD_JOBS
 
 mkfs.vfat -F 32 "${DISK}1"
 mkfs.ext4 "${DISK}2"
@@ -36,7 +37,9 @@ wget "${TARBALL_DIR}/${STAGE_FILE}"
 tar xpvf "${STAGE_FILE}" --xattrs-include='*.*' --numeric-owner
 
 cd /root
-\cp -a /root/gentoo-setup-main/{minimal_make.conf,package.use,package.license} /mnt/gentoo/etc/portage
+\cp -a /mnt/gentoo/etc/portage/make.conf{,.org}
+\cp -a /root/gentoo-setup-main/minimal_make.conf /etc/portage/make.conf
+\cp -a /root/gentoo-setup-main/package.{use,license} /mnt/gentoo/etc/portage
 
 mkdir /mnt/gentoo/etc/portage/repos.conf
 cp /mnt/gentoo/usr/share/portage/config/repos.conf /mnt/gentoo/etc/portage/repos.conf/gentoo.conf
@@ -52,12 +55,12 @@ mount --make-slave /mnt/gentoo/run
 
 source /mnt/gentoo/etc/profile
 
+chroot /mnt/gentoo ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
 chroot /mnt/gentoo emerge-webrsync
 chroot /mnt/gentoo emaint sync -a
 chroot /mnt/gentoo eselect news read
 
-FEATURES='-ccache' chroot /mnt/gentoo emerge -vuDN @world
-FEATURES='-ccache' chroot /mnt/gentoo emerge app-editors/neovim
+chroot /mnt/gentoo emerge -uDN @world
 chroot /mnt/gentoo emerge --depclean
 
 chroot /mnt/gentoo ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
@@ -69,16 +72,16 @@ chroot /mnt/gentoo eselect locale set 4
 chroot /mnt/gentoo env-update
 source /mnt/gentoo/etc/profile
 
-FEATURES='-ccache' chroot /mnt/gentoo emerge sys-kernel/{linux-firmware,gentoo-sources,dracut} sys-firmware/intel-microcode
+chroot /mnt/gentoo emerge sys-kernel/{linux-firmware,gentoo-sources,dracut} sys-firmware/intel-microcode
 chroot /mnt/gentoo eselect kernel set 1
 
 cp -a /root/gentoo-setup-main/gentoo_kernel_conf /mnt/gentoo/usr/src/linux/.config
-chroot /mnt/gentoo bash -c "cd /usr/src/linux && make -j${build_jobs} && make modules_install"
+chroot /mnt/gentoo bash -c "cd /usr/src/linux && make -j${BUILD_JOBS} && make modules_install"
 chroot /mnt/gentoo bash -c 'cd /usr/src/linux && make install'
 
-chroot /mnt/gentoo dracut --kver "$(uname -r)-gentoo" --no-kernel
+chroot /mnt/gentoo dracut --kver "$(uname -r | awk -F '-' '{print $1}')-gentoo" --no-kernel
 
-FEATURES='-ccache' chroot /mnt/gentoo emerge -vuDN @world
+chroot /mnt/gentoo emerge -uDN @world
 chroot /mnt/gentoo emerge --depclean
 
 BOOT_PARTUUID=$(blkid -s PARTUUID -o value "${DISK}1")
@@ -101,10 +104,14 @@ echo 'virtualbox' > /mnt/gentoo/etc/hostname
 chroot /mnt/gentoo systemd-machine-id-setup
 chroot /mnt/gentoo systemd-firstboot --keymap us
 chroot /mnt/gentoo systemctl preset-all
-
 chroot /mnt/gentoo bootctl install
-
 chroot /mnt/gentoo useradd -m -G wheel -s /bin/bash virt
+echo '====================================================='
+echo 'Password of User'
+echo '====================================================='
 chroot /mnt/gentoo passwd virt
+echo '====================================================='
+echo 'Password of root'
+echo '====================================================='
 chroot /mnt/gentoo passwd
 rm /mnt/gentoo/stage3-*.tar.xz
