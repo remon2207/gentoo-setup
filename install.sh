@@ -43,10 +43,10 @@ EOF
 )
 readonly WIRED_NETWORK
 
-SCRIPT_DIR="$(
+SCRIPT_DIR=$(
   cd "$(dirname "${0}")"
   pwd
-)"
+)
 
 if [[ "${GPU}" == 'nvidia' ]]; then
   readonly ENVIRONMENT="GTK_IM_MODULE='fcitx5'
@@ -74,7 +74,7 @@ cd /mnt/gentoo
 wget "${TARBALL_DIR}/${STAGE_FILE}"
 tar xpvf "${STAGE_FILE}" --xattrs-include='*.*' --numeric-owner
 
-\cp -a "${SCRIPT_DIR}/{make.conf,package.use,package.license}" /mnt/gentoo/etc/portage
+\cp -a "${SCRIPT_DIR}"/{make.conf,package.{use,license}} /mnt/gentoo/etc/portage
 
 mkdir /mnt/gentoo/etc/portage/repos.conf
 cp /mnt/gentoo/usr/share/portage/config/repos.conf /mnt/gentoo/etc/portage/repos.conf/gentoo.conf
