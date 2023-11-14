@@ -1,0 +1,1 @@
+dev-python/termcolor PYTHON_TARGETS: -* python3_10 PYTHON_SINGLE_TARGET: -* python3_10

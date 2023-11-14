@@ -1,1 +1,1 @@
-media-video/ffmpeg-chromium nvenc vdpau vulkan
+media-video/ffmpeg-chromium nvenc vdpau vulkan vaapi
