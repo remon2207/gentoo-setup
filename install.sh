@@ -74,7 +74,7 @@ cd /mnt/gentoo
 wget "${TARBALL_DIR}/${STAGE_FILE}"
 tar xpvf "${STAGE_FILE}" --xattrs-include='*.*' --numeric-owner
 
-\cp -a "${SCRIPT_DIR}"/{make.conf,package.{use,license}} /mnt/gentoo/etc/portage
+\cp -a "${SCRIPT_DIR}"/{make.conf,package.{use,license,accept_keywords}} /mnt/gentoo/etc/portage
 
 mkdir /mnt/gentoo/etc/portage/repos.conf
 cp /mnt/gentoo/usr/share/portage/config/repos.conf /mnt/gentoo/etc/portage/repos.conf/gentoo.conf
