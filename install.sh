@@ -53,7 +53,7 @@ if [[ "${GPU}" == 'nvidia' ]]; then
   QT_IM_MODULE='fcitx5'
   XMODIFIERS='@im=fcitx5'
 
-  LIBVA_DRIVER_NAME='vdpau'
+  LIBVA_DRIVER_NAME='nvidia'
   VDPAU_DRIVER='nvidia'"
 elif [[ "${GPU}" == 'amd' ]]; then
   readonly ENVIRONMENT="GTK_IM_MODULE='fcitx5'
@@ -95,6 +95,12 @@ chroot /mnt/gentoo emaint sync -a
 chroot /mnt/gentoo eselect news read
 
 FEATURES='-ccache' chroot /mnt/gentoo emerge dev-util/ccache
+chroot /mnt/gentoo emerge app-portage/cpuid2cpuflags media-libs/nvidia-vaapi-driver
+
+CPU_FLAGS=$(chroot /mnt/gentoo cpuid2cpuflags | sed 's/^CPU_FLAGS_X86: //g')
+readonly CPU_FLAGS
+
+chroot /mnt/gentoo sed -i "s/^# CPU_FLAGS_X86=/CPU_FLAGS_X86=\"${CPU_FLAGS}\"/" /etc/portage/make.conf
 chroot /mnt/gentoo emerge -uDN @world
 chroot /mnt/gentoo emerge app-editors/neovim
 chroot /mnt/gentoo emerge --depclean
