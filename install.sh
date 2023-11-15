@@ -50,18 +50,18 @@ SCRIPT_DIR=$(
 
 if [[ "${GPU}" == 'nvidia' ]]; then
   readonly ENVIRONMENT="GTK_IM_MODULE='fcitx5'
-  QT_IM_MODULE='fcitx5'
-  XMODIFIERS='@im=fcitx5'
+QT_IM_MODULE='fcitx5'
+XMODIFIERS='@im=fcitx5'
 
-  LIBVA_DRIVER_NAME='nvidia'
-  VDPAU_DRIVER='nvidia'"
+LIBVA_DRIVER_NAME='nvidia'
+VDPAU_DRIVER='nvidia'"
 elif [[ "${GPU}" == 'amd' ]]; then
   readonly ENVIRONMENT="GTK_IM_MODULE='fcitx5'
-  QT_IM_MODULE='fcitx5'
-  XMODIFIERS='@im=fcitx5'
+QT_IM_MODULE='fcitx5'
+XMODIFIERS='@im=fcitx5'
 
-  LIBVA_DRIVER_NAME='radeonsi'
-  VDPAU_DRIVER='radeonsi'"
+LIBVA_DRIVER_NAME='radeonsi'
+VDPAU_DRIVER='radeonsi'"
 fi
 
 mkfs.ext4 "${DISK}1"
@@ -157,7 +157,7 @@ echo "${ENVIRONMENT}" >> /mnt/gentoo/etc/environment
 echo "${WIRED_NETWORK}" >> /mnt/gentoo/etc/systemd/network/20-wired.network
 
 chroot /mnt/gentoo sed -i 's/^#NTP=/NTP=ntp.nict.jp/' /etc/systemd/timesyncd.conf
-chroot /mnt/gentoo sed -i 's/^#FallbackNTP=/FallbackNTP=ntp1.jst.mfeed.ad.jp ntp2.jst.mfeed.ad.jp ntp3.jst.mfeed.ad.jp/' /etc/systemd/timesyncd.conf
+chroot /mnt/gentoo sed -i 's/^#FallbackNTP=.*/FallbackNTP=ntp1.jst.mfeed.ad.jp ntp2.jst.mfeed.ad.jp ntp3.jst.mfeed.ad.jp/' /etc/systemd/timesyncd.conf
 
 chroot /mnt/gentoo systemd-machine-id-setup
 chroot /mnt/gentoo systemd-firstboot --keymap us
