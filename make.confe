@@ -7,12 +7,15 @@ CFLAGS="${COMMON_FLAGS}"
 CXXFLAGS="${COMMON_FLAGS}"
 FCFLAGS="${COMMON_FLAGS}"
 FFLAGS="${COMMON_FLAGS}"
-MAKEOPTS="-j7"
+MAKEOPTS="-j13"
 LINGUAS="ja en"
 L10N="ja en"
-VIDEO_CARDS="intel"
+VIDEO_CARDS="nvidia virtualbox"
 INPUT_DEVICES="libinput"
-USE="vaapi policykit pulseaudio cjk systemd X gtk -nvenc -opengl -vdpau -vulkan -nvidia -upnp -upnp-av -semantic-desktop -rss -rdp -ppds -pcmcia -mms -hddtemp -handbook -gphoto2 -gimp -dedicated -clamav -coreaudio -apache2 -aqua -bash-completion -gdbm -qdbm -mssql -mysql -mysqli -oci8 -oci8-instant-client -oracle -postgres -cdb -dbi -dbm -firebird -freetds -odbc -sqlite -smartcard -scanner -joystick -maildir -mbox -milter -networkmanager -screencast -wifi -xscreensaver -alsa -elogind -syslog -qt5 -qt6 -gnome -kde -plasma -wayland"
+FEATURES="ccache"
+CCACHE_SIZE="2G"
+CPU_FLAGS_X86=
+USE="nvenc opengl policykit vdpau vulkan nvidia vaapi pulseaudio cjk systemd X gtk -upnp -upnp-av -semantic-desktop -rss -rdp -ppds -pcmcia -mms -hddtemp -handbook -gphoto2 -gimp -dedicated -clamav -coreaudio -apache2 -aqua -bash-completion -gdbm -qdbm -mssql -mysql -mysqli -oci8 -oci8-instant-client -oracle -postgres -cdb -dbi -dbm -firebird -freetds -odbc -sqlite -smartcard -scanner -joystick -maildir -mbox -milter -networkmanager -screencast -wifi -xscreensaver -alsa -elogind -syslog -qt5 -qt6 -gnome -kde -plasma -wayland"
 
 # NOTE: This stage was built with the bindist Use flag enabled
 
