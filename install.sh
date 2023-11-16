@@ -47,6 +47,7 @@ SCRIPT_DIR=$(
   cd "$(dirname "${0}")"
   pwd
 )
+readonly SCRIPT_DIR
 
 if [[ "${GPU}" == 'nvidia' ]]; then
   readonly ENVIRONMENT="GTK_IM_MODULE='fcitx5'
@@ -142,14 +143,19 @@ FSTAB=$(
 PARTUUID=${BOOT_PARTUUID} /boot vfat defaults,noatime,fmask=0077,dmask=0077 0 2
 PARTUUID=${ROOT_PARTUUID} /     ext4 defaults,noatime                       0 1
 PARTUUID=${HOME_PARTUUID} /home ext4 defaults,noatime                       0 2
+EOF
+)
+readonly FSTAB
 
+CACHE_FSTAB=$(
+  cat << EOF
 # ramdisk
 tmpfs /tmp               tmpfs rw,nodev,nosuid,noatime,size=4G,mode=1777                   0 0
 tmpfs /var/tmp/portage   tmpfs rw,nodev,nosuid,noatime,size=8G                             0 0
 tmpfs /home/remon/.cache tmpfs rw,nodev,nosuid,noatime,size=8G,mode=0755,uid=1000,gid=1000 0 0
 EOF
 )
-readonly FSTAB
+readonly CACHE_FSTAB
 
 echo "${FSTAB}" >> /mnt/gentoo/etc/fstab
 echo 'gentoo' > /mnt/gentoo/etc/hostname
