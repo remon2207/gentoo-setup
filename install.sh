@@ -65,117 +65,166 @@ LIBVA_DRIVER_NAME='radeonsi'
 VDPAU_DRIVER='radeonsi'"
 fi
 
-mkfs.ext4 "${DISK}1"
+partitioning() {
+  mkfs.ext4 "${DISK}1"
 
-mount "${DISK}1" /mnt/gentoo
-mount -m -o fmask=0077,dmask=0077 /dev/sdd1 /mnt/gentoo/boot
-mount -m "${DISK}2" /mnt/gentoo/home
+  mount "${DISK}1" /mnt/gentoo
+  mount -m -o fmask=0077,dmask=0077 /dev/sdd1 /mnt/gentoo/boot
+  mount -m "${DISK}2" /mnt/gentoo/home
+}
 
-cd /mnt/gentoo
-wget "${TARBALL_DIR}/${STAGE_FILE}"
-tar xpvf "${STAGE_FILE}" --xattrs-include='*.*' --numeric-owner
+tarball_extract() {
+  cd /mnt/gentoo
+  wget "${TARBALL_DIR}/${STAGE_FILE}"
+  tar xpvf "${STAGE_FILE}" --xattrs-include='*.*' --numeric-owner
+}
 
-\cp -a "${SCRIPT_DIR}"/{make.conf,package.{use,license,accept_keywords}} /mnt/gentoo/etc/portage
+portage_configration() {
+  \cp -a "${SCRIPT_DIR}"/{make.conf,package.{use,license,accept_keywords}} /mnt/gentoo/etc/portage
 
-mkdir /mnt/gentoo/etc/portage/repos.conf
-cp /mnt/gentoo/usr/share/portage/config/repos.conf /mnt/gentoo/etc/portage/repos.conf/gentoo.conf
-cp -L /etc/resolv.conf /mnt/gentoo/etc/
+  mkdir /mnt/gentoo/etc/portage/repos.conf
+  cp /mnt/gentoo/usr/share/portage/config/repos.conf /mnt/gentoo/etc/portage/repos.conf/gentoo.conf
+  cp -L /etc/resolv.conf /mnt/gentoo/etc/
+}
 
-mount --types proc /proc /mnt/gentoo/proc
-mount --rbind /sys /mnt/gentoo/sys
-mount --make-rslave /mnt/gentoo/sys
-mount --rbind /dev /mnt/gentoo/dev
-mount --make-rslave /mnt/gentoo/dev
-mount --bind /run /mnt/gentoo/run
-mount --make-slave /mnt/gentoo/run
+mounting() {
+  mount --types proc /proc /mnt/gentoo/proc
+  mount --rbind /sys /mnt/gentoo/sys
+  mount --make-rslave /mnt/gentoo/sys
+  mount --rbind /dev /mnt/gentoo/dev
+  mount --make-rslave /mnt/gentoo/dev
+  mount --bind /run /mnt/gentoo/run
+  mount --make-slave /mnt/gentoo/run
 
-source /mnt/gentoo/etc/profile
+  # shellcheck disable=SC1091
+  source /mnt/gentoo/etc/profile
+}
 
-chroot /mnt/gentoo emerge-webrsync
-chroot /mnt/gentoo emaint sync -a
-chroot /mnt/gentoo eselect news read
+repository_update() {
+  chroot /mnt/gentoo emerge-webrsync
+  chroot /mnt/gentoo emaint sync -a
+  chroot /mnt/gentoo eselect news read
+}
 
-FEATURES='-ccache' chroot /mnt/gentoo emerge dev-util/ccache
-chroot /mnt/gentoo emerge app-portage/cpuid2cpuflags
-if [[ "${GPU}" == 'nvidia' ]]; then
-  chroot /mnt/gentoo emerge media-libs/nvidia-vaapi-driver
-fi
+profile_package_installation() {
+  FEATURES='-ccache' chroot /mnt/gentoo emerge dev-util/ccache
+  chroot /mnt/gentoo emerge app-portage/cpuid2cpuflags
 
-CPU_FLAGS=$(chroot /mnt/gentoo cpuid2cpuflags | sed 's/^CPU_FLAGS_X86: //g')
-readonly CPU_FLAGS
+  [[ "${GPU}" == 'nvidia' ]] && chroot /mnt/gentoo emerge media-libs/nvidia-vaapi-driver
 
-chroot /mnt/gentoo sed -i "s/^# CPU_FLAGS_X86=/CPU_FLAGS_X86=\"${CPU_FLAGS}\"/" /etc/portage/make.conf
-chroot /mnt/gentoo emerge -uDN @world
-chroot /mnt/gentoo emerge app-editors/neovim
-chroot /mnt/gentoo emerge --depclean
+  CPU_FLAGS=$(chroot /mnt/gentoo cpuid2cpuflags | sed 's/^CPU_FLAGS_X86: //g')
+  readonly CPU_FLAGS
 
-chroot /mnt/gentoo ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
-chroot /mnt/gentoo sed -i 's/#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen
-chroot /mnt/gentoo sed -i 's/#ja_JP.UTF-8 UTF-8/ja_JP.UTF-8 UTF-8/' /etc/locale.gen
-chroot /mnt/gentoo locale-gen
-chroot /mnt/gentoo eselect locale set 4
+  chroot /mnt/gentoo sed -i "s/^# CPU_FLAGS_X86=/CPU_FLAGS_X86=\"${CPU_FLAGS}\"/" /etc/portage/make.conf
+  chroot /mnt/gentoo emerge -uDN @world
+  chroot /mnt/gentoo emerge app-editors/neovim
+  chroot /mnt/gentoo emerge --depclean
+}
 
-chroot /mnt/gentoo env-update
-source /mnt/gentoo/etc/profile
+localization() {
+  chroot /mnt/gentoo ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
+  chroot /mnt/gentoo sed -i 's/#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen
+  chroot /mnt/gentoo sed -i 's/#ja_JP.UTF-8 UTF-8/ja_JP.UTF-8 UTF-8/' /etc/locale.gen
+  chroot /mnt/gentoo locale-gen
+  chroot /mnt/gentoo eselect locale set 4
 
-chroot /mnt/gentoo emerge sys-kernel/{linux-firmware,gentoo-sources,dracut} sys-firmware/intel-microcode
-chroot /mnt/gentoo eselect kernel set 1
+  chroot /mnt/gentoo env-update
+  # shellcheck disable=SC1091
+  source /mnt/gentoo/etc/profile
+}
 
-cp -a "${SCRIPT_DIR}/gentoo_kernel_conf" /mnt/gentoo/usr/src/linux/.config
-chroot /mnt/gentoo bash -c "cd /usr/src/linux && make oldconfig"
-chroot /mnt/gentoo bash -c "cd /usr/src/linux && make -j${BUILD_JOBS} && make modules_install && make install"
-chroot /mnt/gentoo dracut --kver "$(uname -r | awk -F '-' '{print $1}')-gentoo" --no-kernel
+kernel_installation() {
+  chroot /mnt/gentoo emerge sys-kernel/{linux-firmware,gentoo-sources,dracut} sys-firmware/intel-microcode
+  chroot /mnt/gentoo eselect kernel set 1
 
-chroot /mnt/gentoo emerge -uDN @world
-chroot /mnt/gentoo emerge --depclean
+  cp -a "${SCRIPT_DIR}/gentoo_kernel_conf" /mnt/gentoo/usr/src/linux/.config
+  chroot /mnt/gentoo bash -c "cd /usr/src/linux && make oldconfig"
+  chroot /mnt/gentoo bash -c "cd /usr/src/linux && make -j${BUILD_JOBS} && make modules_install && make install"
+  chroot /mnt/gentoo dracut --kver "$(uname -r | awk -F '-' '{print $1}')-gentoo" --no-kernel
 
-BOOT_PARTUUID=$(blkid -s PARTUUID -o value /dev/sdd1)
-readonly BOOT_PARTUUID
+  chroot /mnt/gentoo emerge -uDN @world
+  chroot /mnt/gentoo emerge --depclean
+}
 
-ROOT_PARTUUID=$(blkid -s PARTUUID -o value "${DISK}1")
-readonly ROOT_PARTUUID
+fstab_configration() {
+  BOOT_PARTUUID=$(blkid -s PARTUUID -o value /dev/sdd1)
+  readonly BOOT_PARTUUID
 
-HOME_PARTUUID=$(blkid -s PARTUUID -o value "${DISK}2")
-readonly HOME_PARTUUID
+  ROOT_PARTUUID=$(blkid -s PARTUUID -o value "${DISK}1")
+  readonly ROOT_PARTUUID
 
-FSTAB=$(
-  cat << EOF
+  HOME_PARTUUID=$(blkid -s PARTUUID -o value "${DISK}2")
+  readonly HOME_PARTUUID
+
+  FSTAB=$(
+    cat << EOF
 PARTUUID=${BOOT_PARTUUID} /boot vfat defaults,noatime,fmask=0077,dmask=0077 0 2
 PARTUUID=${ROOT_PARTUUID} /     ext4 defaults,noatime                       0 1
 PARTUUID=${HOME_PARTUUID} /home ext4 defaults,noatime                       0 2
 EOF
-)
-readonly FSTAB
+  )
+  readonly FSTAB
 
-CACHE_FSTAB=$(
-  cat << EOF
-# ramdisk
-tmpfs /tmp               tmpfs rw,nodev,nosuid,noatime,size=4G,mode=1777                   0 0
-tmpfs /var/tmp/portage   tmpfs rw,nodev,nosuid,noatime,size=8G                             0 0
-tmpfs /home/remon/.cache tmpfs rw,nodev,nosuid,noatime,size=8G,mode=0755,uid=1000,gid=1000 0 0
-EOF
-)
-readonly CACHE_FSTAB
+  #   CACHE_FSTAB=$(
+  #     cat << EOF
+  # # ramdisk
+  # tmpfs /tmp               tmpfs rw,nodev,nosuid,noatime,size=4G,mode=1777                   0 0
+  # tmpfs /var/tmp/portage   tmpfs rw,nodev,nosuid,noatime,size=8G                             0 0
+  # tmpfs /home/remon/.cache tmpfs rw,nodev,nosuid,noatime,size=8G,mode=0755,uid=1000,gid=1000 0 0
+  # EOF
+  #   )
+  #   readonly CACHE_FSTAB
 
-echo "${FSTAB}" >> /mnt/gentoo/etc/fstab
-echo 'gentoo' > /mnt/gentoo/etc/hostname
-echo "${ENVIRONMENT}" >> /mnt/gentoo/etc/environment
-echo "${WIRED_NETWORK}" >> /mnt/gentoo/etc/systemd/network/20-wired.network
+  echo "${FSTAB}" >> /mnt/gentoo/etc/fstab
+}
 
-chroot /mnt/gentoo sed -i 's/^#NTP=/NTP=ntp.nict.jp/' /etc/systemd/timesyncd.conf
-chroot /mnt/gentoo sed -i 's/^#FallbackNTP=.*/FallbackNTP=ntp1.jst.mfeed.ad.jp ntp2.jst.mfeed.ad.jp ntp3.jst.mfeed.ad.jp/' /etc/systemd/timesyncd.conf
+systemd_configration() {
+  chroot /mnt/gentoo systemd-machine-id-setup
+  chroot /mnt/gentoo systemd-firstboot --keymap us
+  chroot /mnt/gentoo systemctl preset-all
+  chroot /mnt/gentoo bootctl install
+}
 
-chroot /mnt/gentoo systemd-machine-id-setup
-chroot /mnt/gentoo systemd-firstboot --keymap us
-chroot /mnt/gentoo systemctl preset-all
-chroot /mnt/gentoo bootctl install
-chroot /mnt/gentoo useradd -m -G wheel -s /bin/bash remon
-echo '====================================================='
-echo 'Password of User'
-echo '====================================================='
-chroot /mnt/gentoo passwd remon
-echo '====================================================='
-echo 'Password of root'
-echo '====================================================='
-chroot /mnt/gentoo passwd
-rm /mnt/gentoo/stage3-*.tar.xz
+user_setting() {
+  readonly USER_NAME='remon'
+
+  chroot /mnt/gentoo useradd -m -G wheel -s /bin/bash "${USER_NAME}"
+  echo '====================================================='
+  echo 'Password of User'
+  echo '====================================================='
+  chroot /mnt/gentoo passwd "${USER_NAME}"
+  echo '====================================================='
+  echo 'Password of root'
+  echo '====================================================='
+  chroot /mnt/gentoo passwd
+}
+
+others_configration() {
+  # Network
+  echo 'gentoo' > /mnt/gentoo/etc/hostname
+  echo "${WIRED_NETWORK}" >> /mnt/gentoo/etc/systemd/network/20-wired.network
+  # env
+  echo "${ENVIRONMENT}" >> /mnt/gentoo/etc/environment
+  # Time sync
+  chroot /mnt/gentoo sed -i 's/^#NTP=/NTP=ntp.nict.jp/' -e \
+    's/^#FallbackNTP=.*/FallbackNTP=ntp1.jst.mfeed.ad.jp ntp2.jst.mfeed.ad.jp ntp3.jst.mfeed.ad.jp/' /etc/systemd/timesyncd.conf
+
+  rm /mnt/gentoo/stage3-*.tar.xz
+}
+
+main() {
+  partitioning
+  tarball_extract
+  portage_configration
+  mounting
+  repository_update
+  profile_package_installation
+  localization
+  kernel_installation
+  fstab_configration
+  systemd_configration
+  user_setting
+  others_configration
+}
+
+main "${@}"
