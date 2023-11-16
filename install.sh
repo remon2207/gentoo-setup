@@ -85,6 +85,8 @@ portage_configration() {
   mkdir /mnt/gentoo/etc/portage/repos.conf
   cp /mnt/gentoo/usr/share/portage/config/repos.conf /mnt/gentoo/etc/portage/repos.conf/gentoo.conf
   cp -L /etc/resolv.conf /mnt/gentoo/etc/
+
+  chroot /mnt/gentoo sed -i "s/^MAKEOPTS=.*/MAKEOPTS=\"-j${BUILD_JOBS}\"/" /etc/portage/make.conf
 }
 
 mounting() {
