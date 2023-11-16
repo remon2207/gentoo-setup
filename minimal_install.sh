@@ -100,7 +100,7 @@ portage_configration() {
   cp /mnt/gentoo/usr/share/portage/config/repos.conf /mnt/gentoo/etc/portage/repos.conf/gentoo.conf
   cp -L /etc/resolv.conf /mnt/gentoo/etc/
 
-  chroot /mnt/gentoo sed -i "s/^MAKEOPTS=.*/MAKEOPTS=\"-j${BUILD_JOBS}\"/" /etc/portage/make.conf
+  chroot /mnt/gentoo sed -i "s/^\(MAKEOPTS=\).*/\1\"-j${BUILD_JOBS}\"/" /etc/portage/make.conf
 }
 
 mounting() {
@@ -131,7 +131,7 @@ profile_package_installation() {
   CPU_FLAGS=$(chroot /mnt/gentoo cpuid2cpuflags | sed 's/^CPU_FLAGS_X86: //g')
   readonly CPU_FLAGS
 
-  chroot /mnt/gentoo sed -i "s/^# CPU_FLAGS_X86=/CPU_FLAGS_X86=\"${CPU_FLAGS}\"/" /etc/portage/make.conf
+  chroot /mnt/gentoo sed -i "s/^# \(CPU_FLAGS_X86=\)/\1\"${CPU_FLAGS}\"/" /etc/portage/make.conf
   chroot /mnt/gentoo emerge -uDN @world
   chroot /mnt/gentoo emerge app-editors/neovim
   chroot /mnt/gentoo emerge --depclean
@@ -139,8 +139,8 @@ profile_package_installation() {
 
 localization() {
   chroot /mnt/gentoo ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
-  chroot /mnt/gentoo sed -i 's/#en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen
-  chroot /mnt/gentoo sed -i 's/#ja_JP.UTF-8 UTF-8/ja_JP.UTF-8 UTF-8/' /etc/locale.gen
+  chroot /mnt/gentoo sed -i 's/^#\(en_US.UTF-8 UTF-8\)/\1/' /etc/locale.gen
+  chroot /mnt/gentoo sed -i 's/^#\(ja_JP.UTF-8 UTF-8\)/\1/' /etc/locale.gen
   chroot /mnt/gentoo locale-gen
   chroot /mnt/gentoo eselect locale set 4
 
@@ -235,8 +235,8 @@ others_configration() {
   # env
   echo "${ENVIRONMENT}" >> /mnt/gentoo/etc/environment
   # Time sync
-  chroot /mnt/gentoo sed -i 's/^#NTP=/NTP=ntp.nict.jp/' -e \
-    's/^#FallbackNTP=.*/FallbackNTP=ntp1.jst.mfeed.ad.jp ntp2.jst.mfeed.ad.jp ntp3.jst.mfeed.ad.jp/' /etc/systemd/timesyncd.conf
+  chroot /mnt/gentoo sed -i 's/^#\(NTP=\)/\1ntp.nict.jp/' -e \
+    's/^#\(FallbackNTP=\).*/\1ntp1.jst.mfeed.ad.jp ntp2.jst.mfeed.ad.jp ntp3.jst.mfeed.ad.jp/' /etc/systemd/timesyncd.conf
 
   rm /mnt/gentoo/stage3-*.tar.xz
 }
