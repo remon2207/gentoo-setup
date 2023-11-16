@@ -22,16 +22,16 @@ fi
 
 readonly TARBALL_DIR='https://distfiles.gentoo.org/releases/amd64/autobuilds/current-stage3-amd64-systemd'
 
-STAGE_FILE="$(curl -sL "${TARBALL_DIR}" | grep 'tar.xz"' | awk -F '"' '{print $8}')"
+STAGE_FILE=$(curl -sL "${TARBALL_DIR}" | grep 'tar.xz"' | awk -F '"' '{print $8}')
 readonly STAGE_FILE
 
-BUILD_JOBS="$(("$(nproc)" + 1))"
+BUILD_JOBS=$(($(nproc) + 1))
 readonly BUILD_JOBS
 
-NET_INTERFACE="$(ip -br link show | awk 'NR==2 {print $1}')"
+NET_INTERFACE=$(ip -br link show | awk 'NR==2 {print $1}')
 readonly NET_INTERFACE
 
-WIRED_NETWORK="$(
+WIRED_NETWORK=$(
   cat << EOF
 [Match]
 Name=${NET_INTERFACE}
@@ -41,22 +41,22 @@ DHCP=yes
 DNS=8.8.8.8
 DNS=8.8.4.4
 EOF
-)"
+)
 readonly WIRED_NETWORK
 
-SCRIPT_DIR="$(
+SCRIPT_DIR=$(
   cd "$(dirname "${0}")"
   pwd
-)"
+)
 readonly SCRIPT_DIR
 
-LOADER_CONF="$(
+LOADER_CONF=$(
   cat << EOF
 timeout      10
 console-mode max
 editor       no
 EOF
-)"
+)
 readonly LOADER_CONF
 
 if [[ "${GPU}" == 'nvidia' ]]; then
@@ -129,7 +129,7 @@ profile_package_installation() {
 
   [[ "${GPU}" == 'nvidia' ]] && chroot /mnt/gentoo emerge media-libs/nvidia-vaapi-driver
 
-  CPU_FLAGS="$(chroot /mnt/gentoo cpuid2cpuflags | sed 's/^CPU_FLAGS_X86: //g')"
+  CPU_FLAGS=$(chroot /mnt/gentoo cpuid2cpuflags | sed 's/^CPU_FLAGS_X86: //g')
   readonly CPU_FLAGS
 
   chroot /mnt/gentoo sed -i "s/^# \(CPU_FLAGS_X86=\)/\1\"${CPU_FLAGS}\"/" /etc/portage/make.conf
@@ -164,18 +164,18 @@ kernel_installation() {
 }
 
 fstab_configration() {
-  BOOT_PARTUUID="$(blkid -s PARTUUID -o value "${DISK}1")"
+  BOOT_PARTUUID=$(blkid -s PARTUUID -o value "${DISK}1")
   readonly BOOT_PARTUUID
 
-  ROOT_PARTUUID="$(blkid -s PARTUUID -o value "${DISK}2")"
+  ROOT_PARTUUID=$(blkid -s PARTUUID -o value "${DISK}2")
   readonly ROOT_PARTUUID
 
-  FSTAB="$(
+  FSTAB=$(
     cat << EOF
 PARTUUID=${BOOT_PARTUUID} /boot vfat defaults,noatime,fmask=0077,dmask=0077 0 2
 PARTUUID=${ROOT_PARTUUID} /     ext4 defaults,noatime                       0 1
 EOF
-  )"
+  )
   readonly FSTAB
 
   echo "${FSTAB}" >> /mnt/gentoo/etc/fstab
@@ -187,19 +187,19 @@ systemd_configration() {
   chroot /mnt/gentoo systemctl preset-all
   chroot /mnt/gentoo bootctl install
 
-  MACHINE_ID="$(cat /mnt/gentoo/etc/machine-id)"
+  MACHINE_ID=$(cat /mnt/gentoo/etc/machine-id)
   readonly MACHINE_ID
 
-  VMLINUZ="$(find /mnt/gentoo/boot -iname 'vmlinuz*gentoo' -type f | awk -F '/' '{print $5}')"
+  VMLINUZ=$(find /mnt/gentoo/boot -iname 'vmlinuz*gentoo' -type f | awk -F '/' '{print $5}')
   readonly VMLINUZ
 
-  UCODE="$(find /mnt/gentoo/boot -iname '*uc*' -type f | awk -F '/' '{print $5}')"
+  UCODE=$(find /mnt/gentoo/boot -iname '*uc*' -type f | awk -F '/' '{print $5}')
   readonly UCODE
 
-  INITRAMFS="$(find /mnt/gentoo/boot -iname 'initramfs*gentoo*' -type f | awk -F '/' '{print $5}')"
+  INITRAMFS=$(find /mnt/gentoo/boot -iname 'initramfs*gentoo*' -type f | awk -F '/' '{print $5}')
   readonly INITRAMFS
 
-  ENTRY_CONF="$(
+  ENTRY_CONF=$(
     cat << EOF
 title      Gentoo
 linux      /${VMLINUZ}
@@ -208,7 +208,7 @@ initrd     /${INITRAMFS}
 machine-id ${MACHINE_ID}
 options    root=PARTUUID=${ROOT_PARTUUID} rw loglevel=3 panic=180
 EOF
-  )"
+  )
   readonly ENTRY_CONF
 
   echo "${LOADER_CONF}" >> /mnt/gentoo/boot/loader/loader.conf

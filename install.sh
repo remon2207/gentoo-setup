@@ -22,16 +22,16 @@ fi
 
 readonly TARBALL_DIR='https://distfiles.gentoo.org/releases/amd64/autobuilds/current-stage3-amd64-systemd'
 
-STAGE_FILE="$(curl -sL "${TARBALL_DIR}" | grep 'tar.xz"' | awk -F '"' '{print $8}')"
+STAGE_FILE=$(curl -sL "${TARBALL_DIR}" | grep 'tar.xz"' | awk -F '"' '{print $8}')
 readonly STAGE_FILE
 
-BUILD_JOBS="$(("$(nproc)" + 1))"
+BUILD_JOBS=$(($(nproc) + 1))
 readonly BUILD_JOBS
 
-NET_INTERFACE="$(ip -br link show | awk 'NR==2 {print $1}')"
+NET_INTERFACE=$(ip -br link show | awk 'NR==2 {print $1}')
 readonly NET_INTERFACE
 
-WIRED_NETWORK="$(
+WIRED_NETWORK=$(
   cat << EOF
 [Match]
 Name=${NET_INTERFACE}
@@ -40,13 +40,13 @@ Name=${NET_INTERFACE}
 DHCP=yes
 DNS=192.168.1.202
 EOF
-)"
+)
 readonly WIRED_NETWORK
 
-SCRIPT_DIR="$(
+SCRIPT_DIR=$(
   cd "$(dirname "${0}")"
   pwd
-)"
+)
 readonly SCRIPT_DIR
 
 if [[ "${GPU}" == 'nvidia' ]]; then
@@ -115,7 +115,7 @@ profile_package_installation() {
 
   [[ "${GPU}" == 'nvidia' ]] && chroot /mnt/gentoo emerge media-libs/nvidia-vaapi-driver
 
-  CPU_FLAGS="$(chroot /mnt/gentoo cpuid2cpuflags | sed 's/^CPU_FLAGS_X86: //g')"
+  CPU_FLAGS=$(chroot /mnt/gentoo cpuid2cpuflags | sed 's/^CPU_FLAGS_X86: //g')
   readonly CPU_FLAGS
 
   chroot /mnt/gentoo sed -i "s/^# \(CPU_FLAGS_X86=\)/\1\"${CPU_FLAGS}\"/" /etc/portage/make.conf
@@ -150,22 +150,22 @@ kernel_installation() {
 }
 
 fstab_configration() {
-  BOOT_PARTUUID="$(blkid -s PARTUUID -o value /dev/sdd1)"
+  BOOT_PARTUUID=$(blkid -s PARTUUID -o value /dev/sdd1)
   readonly BOOT_PARTUUID
 
-  ROOT_PARTUUID="$(blkid -s PARTUUID -o value "${DISK}1")"
+  ROOT_PARTUUID=$(blkid -s PARTUUID -o value "${DISK}1")
   readonly ROOT_PARTUUID
 
-  HOME_PARTUUID="$(blkid -s PARTUUID -o value "${DISK}2")"
+  HOME_PARTUUID=$(blkid -s PARTUUID -o value "${DISK}2")
   readonly HOME_PARTUUID
 
-  FSTAB="$(
+  FSTAB=$(
     cat << EOF
 PARTUUID=${BOOT_PARTUUID} /boot vfat defaults,noatime,fmask=0077,dmask=0077 0 2
 PARTUUID=${ROOT_PARTUUID} /     ext4 defaults,noatime                       0 1
 PARTUUID=${HOME_PARTUUID} /home ext4 defaults,noatime                       0 2
 EOF
-  )"
+  )
   readonly FSTAB
 
   #   CACHE_FSTAB=$(
