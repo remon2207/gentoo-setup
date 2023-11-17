@@ -238,7 +238,8 @@ pkgs_installation() {
 }
 
 group_configration() {
-  for groups in video pipewire; do chroot /mnt/gentoo gpasswd -a "${USER_NAME}" "${groups}"; done
+  for groups in video pipewire vboxguest vboxusers; do chroot /mnt/gentoo gpasswd -a "${USER_NAME}" "${groups}"; done
+  chroot /mnt/gentoo systemctl enable {virtualbox-guest-additions,docker}.service
 }
 
 others_configration() {
