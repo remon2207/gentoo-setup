@@ -81,7 +81,9 @@ portage_configration() {
   cp /mnt/gentoo/usr/share/portage/config/repos.conf /mnt/gentoo/etc/portage/repos.conf/gentoo.conf
   cp -L /etc/resolv.conf /mnt/gentoo/etc/
 
-  chroot /mnt/gentoo sed -i -e "s/^\(MAKEOPTS=\"-j\).*/\1${BUILD_JOBS}\"/" /etc/portage/make.conf
+  chroot /mnt/gentoo sed -i -e "s/^\(MAKEOPTS=\"-j\).*/\1${BUILD_JOBS}\"/" -e \
+    's/^\(CPU_FLAGS_X86=\).*/# \1/' -e \
+    's/^\(USE=".*\) pulseaudio/\1/' /etc/portage/make.conf
 }
 
 mounting() {
@@ -98,7 +100,6 @@ mounting() {
 }
 
 repository_update() {
-  chroot /mnt/gentoo sed -i -e 's/^\(CPU_FLAGS_X86=\).*/# \1/' /etc/portage/make.conf
   chroot /mnt/gentoo emerge-webrsync
   chroot /mnt/gentoo emaint sync -a
   chroot /mnt/gentoo eselect news read
@@ -110,7 +111,7 @@ profile_package_installation() {
 
   [[ "${GPU}" == 'nvidia' ]] && chroot /mnt/gentoo emerge media-libs/nvidia-vaapi-driver
 
-  CPU_FLAGS=$(chroot /mnt/gentoo cpuid2cpuflags | sed 's/^CPU_FLAGS_X86: //g')
+  CPU_FLAGS=$(chroot /mnt/gentoo cpuid2cpuflags | sed 's/^CPU_FLAGS_X86: //')
   readonly CPU_FLAGS
 
   chroot /mnt/gentoo sed -i -e "s/^# \(CPU_FLAGS_X86=\)/\1\"${CPU_FLAGS}\"/" /etc/portage/make.conf
@@ -184,7 +185,7 @@ systemd_configration() {
 }
 
 user_setting() {
-  readonly USER_NAME='remon'
+  local -r USER_NAME='remon'
 
   chroot /mnt/gentoo useradd -m -G wheel -s /bin/bash "${USER_NAME}"
   echo '====================================================='
@@ -195,46 +196,6 @@ user_setting() {
   echo 'Password of root'
   echo '====================================================='
   chroot /mnt/gentoo passwd
-}
-
-pkgs_installation() {
-  chroot /mnt/gentoo emerge app-eselect/eselect-repository dev-vcs/git
-  chroot /mnt/gentoo eselect repository enable guru gentoo-zh
-  for repos in guru gentoo-zh; do chroot /mnt/gentoo emaint sync -r "${repos}"; done
-  chroot /mnt/gentoo sed -i -e 's/pulseaudio //' /etc/portage/make.conf
-  chroot /mnt/gentoo emerge media-video/{wireplumber,pipewire} \
-    media-sound/{pulseaudio,pavucontrol} \
-    media-libs/{libpulse,nvidia-vaapi-driver} \
-    app-admin/sudo \
-    app-containers/docker{,-cli} \
-    app-emulation/virtualbox{,-additions,-guest-additions,-extpack-oracle} \
-    app-i18n/{fcitx{,-configtool,-gtk,-qt}:5,mozc} \
-    app-misc/{ghq,jq,neofetch,ranger,tmux} \
-    app-shells/{fzf,gentoo-zsh-completions,starship,zsh} \
-    app-text/tldr \
-    dev-lang/go \
-    dev-util/{git-delta,github-cli,shellcheck} \
-    dev-vcs/lazygit \
-    media-fonts/{fontawesome,hack,nerd-fonts,noto{,-cjk,-emoji}} \
-    media-gfx/{feh,scrot,silicon} \
-    net-im/{discord,slack} \
-    net-fs/nfs-utils \
-    sys-apps/{bat,fd,lsd,pciutils,ripgrep,sd} \
-    sys-process/htop \
-    www-client/{vivaldi,w3m} \
-    www-misc/profile-sync-daemon \
-    x11-base/xorg-server \
-    x11-misc/{dunst,i3lock,picom,polybar,qt5ct,rofi,xautolock,xdg-user-dirs} \
-    x11-terms/{alacritty,kitty,wezterm} \
-    x11-themes/{arc-theme,breezex-xcursors,kvantum,papirus-icon-theme} \
-    x11-wm/i3
-  chroot /mnt/gentoo sed -i -e 's/^USE="/&pulseaudio /' /etc/portage/make.conf
-  chroot /mnt/gentoo emerge -uDN @world
-}
-
-group_configration() {
-  for groups in video pipewire vboxguest vboxusers; do chroot /mnt/gentoo gpasswd -a "${USER_NAME}" "${groups}"; done
-  chroot /mnt/gentoo systemctl enable {virtualbox-guest-additions,docker}.service
 }
 
 others_configration() {
@@ -262,8 +223,6 @@ main() {
   fstab_configration
   systemd_configration
   user_setting
-  pkgs_installation
-  group_configration
   others_configration
 }
 

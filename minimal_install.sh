@@ -101,7 +101,9 @@ portage_configration() {
   cp /mnt/gentoo/usr/share/portage/config/repos.conf /mnt/gentoo/etc/portage/repos.conf/gentoo.conf
   cp -L /etc/resolv.conf /mnt/gentoo/etc/
 
-  chroot /mnt/gentoo sed -i -e "s/^\(MAKEOPTS=\"-j\).*/\1${BUILD_JOBS}\"/" /etc/portage/make.conf
+  chroot /mnt/gentoo sed -i -e "s/^\(MAKEOPTS=\"-j\).*/\1${BUILD_JOBS}\"/" -e \
+    's/^\(CPU_FLAGS_X86=\).*/# \1/' -e \
+    's/^\(USE=".*\) pulseaudio/\1/' /etc/portage/make.conf
 }
 
 mounting() {
@@ -118,7 +120,6 @@ mounting() {
 }
 
 repository_update() {
-  chroot /mnt/gentoo sed -i -e 's/^\(CPU_FLAGS_X86=\).*/# \1/' /etc/portage/make.conf
   chroot /mnt/gentoo emerge-webrsync
   chroot /mnt/gentoo emaint sync -a
   chroot /mnt/gentoo eselect news read
@@ -130,7 +131,7 @@ profile_package_installation() {
 
   [[ "${GPU}" == 'nvidia' ]] && chroot /mnt/gentoo emerge media-libs/nvidia-vaapi-driver
 
-  CPU_FLAGS=$(chroot /mnt/gentoo cpuid2cpuflags | sed 's/^CPU_FLAGS_X86: //g')
+  CPU_FLAGS=$(chroot /mnt/gentoo cpuid2cpuflags | sed 's/^CPU_FLAGS_X86: //')
   readonly CPU_FLAGS
 
   chroot /mnt/gentoo sed -i -e "s/^# \(CPU_FLAGS_X86=\)/\1\"${CPU_FLAGS}\"/" /etc/portage/make.conf
@@ -191,13 +192,13 @@ systemd_configration() {
   MACHINE_ID=$(cat /mnt/gentoo/etc/machine-id)
   readonly MACHINE_ID
 
-  VMLINUZ=$(find /mnt/gentoo/boot -iname 'vmlinuz*gentoo' -type f | awk -F '/' '{print $5}')
+  VMLINUZ=$(find /mnt/gentoo/boot -iname '*vmlinuz*gentoo' -type f | awk -F '/' '{print $5}')
   readonly VMLINUZ
 
   UCODE=$(find /mnt/gentoo/boot -iname '*uc*' -type f | awk -F '/' '{print $5}')
   readonly UCODE
 
-  INITRAMFS=$(find /mnt/gentoo/boot -iname 'initramfs*gentoo*' -type f | awk -F '/' '{print $5}')
+  INITRAMFS=$(find /mnt/gentoo/boot -iname '*initramfs*gentoo*' -type f | awk -F '/' '{print $5}')
   readonly INITRAMFS
 
   ENTRY_CONF=$(
