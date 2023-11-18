@@ -5,8 +5,9 @@ set -eu
 pkgs_installation() {
   sudo emerge app-eselect/eselect-repository dev-vcs/git
   sudo eselect repository enable guru gentoo-zh
+  sudo eselect repository add remon-overlay git https://github.com/remon2207/remon-overlay.git
 
-  for repos in guru gentoo-zh; do emaint sync -r "${repos}"; done
+  for repos in guru gentoo-zh remon-overlay; do emaint sync -r "${repos}"; done
 
   sudo emerge media-video/{wireplumber,pipewire} \
     media-sound/{pulseaudio,pavucontrol} \
@@ -26,6 +27,7 @@ pkgs_installation() {
     net-im/{discord,slack} \
     net-fs/nfs-utils \
     sys-apps/{bat,fd,lsd,pciutils,ripgrep,sd} \
+    sys-auth/authy \
     sys-process/htop \
     www-client/{vivaldi,w3m} \
     www-misc/profile-sync-daemon \
@@ -56,7 +58,7 @@ tmpfs /var/tmp/portage   tmpfs rw,nodev,nosuid,noatime,size=8G                  
 tmpfs /home/remon/.cache tmpfs rw,nodev,nosuid,noatime,size=8G,mode=0755,uid=1000,gid=1000 0 0
 EOF
   )
-  readonly CACHE_FSTAB
+  local -r CACHE_FSTAB
 
   echo "${CACHE_FSTAB}" >> /mnt/gentoo/etc/fstab
 }
