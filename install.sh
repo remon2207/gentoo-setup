@@ -81,7 +81,7 @@ portage_configration() {
   cp /mnt/gentoo/usr/share/portage/config/repos.conf /mnt/gentoo/etc/portage/repos.conf/gentoo.conf
   cp -L /etc/resolv.conf /mnt/gentoo/etc/
 
-  chroot /mnt/gentoo sed -i "s/^\(MAKEOPTS=\"-j\).*/\1${BUILD_JOBS}\"/" /etc/portage/make.conf
+  chroot /mnt/gentoo sed -i -e "s/^\(MAKEOPTS=\"-j\).*/\1${BUILD_JOBS}\"/" /etc/portage/make.conf
 }
 
 mounting() {
@@ -98,7 +98,7 @@ mounting() {
 }
 
 repository_update() {
-  chroot /mnt/gentoo sed -i 's/^\(CPU_FLAGS_X86=\).*/# \1/' /etc/portage/make.conf
+  chroot /mnt/gentoo sed -i -e 's/^\(CPU_FLAGS_X86=\).*/# \1/' /etc/portage/make.conf
   chroot /mnt/gentoo emerge-webrsync
   chroot /mnt/gentoo emaint sync -a
   chroot /mnt/gentoo eselect news read
@@ -113,7 +113,7 @@ profile_package_installation() {
   CPU_FLAGS=$(chroot /mnt/gentoo cpuid2cpuflags | sed 's/^CPU_FLAGS_X86: //g')
   readonly CPU_FLAGS
 
-  chroot /mnt/gentoo sed -i "s/^# \(CPU_FLAGS_X86=\)/\1\"${CPU_FLAGS}\"/" /etc/portage/make.conf
+  chroot /mnt/gentoo sed -i -e "s/^# \(CPU_FLAGS_X86=\)/\1\"${CPU_FLAGS}\"/" /etc/portage/make.conf
   chroot /mnt/gentoo emerge -uDN @world
   chroot /mnt/gentoo emerge app-editors/neovim
   chroot /mnt/gentoo emerge --depclean
@@ -121,7 +121,7 @@ profile_package_installation() {
 
 localization() {
   chroot /mnt/gentoo ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
-  chroot /mnt/gentoo sed -i 's/^#\(en_US.UTF-8 UTF-8\)/\1/' -e \
+  chroot /mnt/gentoo sed -i -e 's/^#\(en_US.UTF-8 UTF-8\)/\1/' -e \
     's/^#\(ja_JP.UTF-8 UTF-8\)/\1/' /etc/locale.gen
   chroot /mnt/gentoo locale-gen
   chroot /mnt/gentoo eselect locale set 4
@@ -201,7 +201,7 @@ pkgs_installation() {
   chroot /mnt/gentoo emerge app-eselect/eselect-repository dev-vcs/git
   chroot /mnt/gentoo eselect repository enable guru gentoo-zh
   for repos in guru gentoo-zh; do chroot /mnt/gentoo emaint sync -r "${repos}"; done
-  chroot /mnt/gentoo sed -i 's/pulseaudio //' /etc/portage/make.conf
+  chroot /mnt/gentoo sed -i -e 's/pulseaudio //' /etc/portage/make.conf
   chroot /mnt/gentoo emerge media-video/{wireplumber,pipewire} \
     media-sound/{pulseaudio,pavucontrol} \
     media-libs/{libpulse,nvidia-vaapi-driver} \
@@ -228,7 +228,7 @@ pkgs_installation() {
     x11-terms/{alacritty,kitty,wezterm} \
     x11-themes/{arc-theme,breezex-xcursors,kvantum,papirus-icon-theme} \
     x11-wm/i3
-  chroot /mnt/gentoo sed -i 's/^USE="/&pulseaudio /' /etc/portage/make.conf
+  chroot /mnt/gentoo sed -i -e 's/^USE="/&pulseaudio /' /etc/portage/make.conf
   chroot /mnt/gentoo emerge -uDN @world
 }
 
@@ -244,7 +244,7 @@ others_configration() {
   # env
   echo "${ENVIRONMENT}" >> /mnt/gentoo/etc/environment
   # Time sync
-  chroot /mnt/gentoo sed -i 's/^#\(NTP=\)/\1ntp.nict.jp/' -e \
+  chroot /mnt/gentoo sed -i -e 's/^#\(NTP=\)/\1ntp.nict.jp/' -e \
     's/^#\(FallbackNTP=\).*/\1ntp1.jst.mfeed.ad.jp ntp2.jst.mfeed.ad.jp ntp3.jst.mfeed.ad.jp/' /etc/systemd/timesyncd.conf
 
   rm /mnt/gentoo/stage3-*.tar.xz
