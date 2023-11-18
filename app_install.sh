@@ -44,13 +44,13 @@ pkgs_installation() {
 group_configration() {
   for groups in video pipewire vboxguest vboxusers; do sudo gpasswd -a "${USER}" "${groups}"; done
 
-  sudo systemctl enable --now {virtualbox-guest-additions,docker}.service
-  systemctl --user disable --now pulseaudio.{socket,service}
-  systemctl --user enable --now pipewire.socket pipewire-pulse.socket wireplumber.service
+  sudo systemctl enable {virtualbox-guest-additions,docker}.service
+  systemctl --user disable pulseaudio.{socket,service}
+  systemctl --user enable pipewire.socket pipewire-pulse.socket wireplumber.service
 }
 
 fstab_configration() {
-  CACHE_FSTAB=$(
+  local -r CACHE_FSTAB=$(
     cat << EOF
 # ramdisk
 tmpfs /tmp               tmpfs rw,nodev,nosuid,noatime,size=4G,mode=1777                   0 0
@@ -58,7 +58,6 @@ tmpfs /var/tmp/portage   tmpfs rw,nodev,nosuid,noatime,size=8G                  
 tmpfs /home/remon/.cache tmpfs rw,nodev,nosuid,noatime,size=8G,mode=0755,uid=1000,gid=1000 0 0
 EOF
   )
-  local -r CACHE_FSTAB
 
   echo "${CACHE_FSTAB}" >> /mnt/gentoo/etc/fstab
 }

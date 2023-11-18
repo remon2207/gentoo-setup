@@ -20,24 +20,8 @@ elif [[ "${1}" == '--disk' ]] && [[ "${3}" == '--gpu' ]]; then
   readonly GPU="${4}"
 fi
 
-readonly TARBALL_DIR='https://distfiles.gentoo.org/releases/amd64/autobuilds/current-stage3-amd64-systemd'
-
-STAGE_FILE=$(curl -sL "${TARBALL_DIR}" | grep 'tar.xz"' | awk -F '"' '{print $8}')
-readonly STAGE_FILE
-
 BUILD_JOBS=$(($(nproc) + 1))
 readonly BUILD_JOBS
-
-NET_INTERFACE=$(ip -br link show | awk 'NR==2 {print $1}')
-readonly NET_INTERFACE
-
-readonly WIRED_NETWORK="[Match]
-Name=${NET_INTERFACE}
-
-[Network]
-DHCP=yes
-DNS=8.8.8.8
-DNS=8.8.4.4"
 
 SCRIPT_DIR=$(
   cd "$(dirname "${0}")"
@@ -45,38 +29,10 @@ SCRIPT_DIR=$(
 )
 readonly SCRIPT_DIR
 
-LOADER_CONF=$(
-  cat << EOF
-timeout      10
-console-mode max
-editor       no
-EOF
-)
-readonly LOADER_CONF
-
-if [[ "${GPU}" == 'nvidia' ]]; then
-  readonly ENVIRONMENT="GTK_IM_MODULE='fcitx5'
-QT_IM_MODULE='fcitx5'
-XMODIFIERS='@im=fcitx5'
-
-LIBVA_DRIVER_NAME='nvidia'
-VDPAU_DRIVER='nvidia'"
-elif [[ "${GPU}" == 'amd' ]]; then
-  readonly ENVIRONMENT="GTK_IM_MODULE='fcitx5'
-QT_IM_MODULE='fcitx5'
-XMODIFIERS='@im=fcitx5'
-
-LIBVA_DRIVER_NAME='radeonsi'
-VDPAU_DRIVER='radeonsi'"
-fi
-
-EFI_PART_TYPE=$(sgdisk -L | grep 'ef00' | awk '{print $6,$7,$8}')
-readonly EFI_PART_TYPE
-
-NORMAL_PART_TYPE=$(sgdisk -L | grep '8300' | awk '{print $2,$3}')
-readonly NORMAL_PART_TYPE
-
 partitioning() {
+  local -r EFI_PART_TYPE=$(sgdisk -L | grep 'ef00' | awk '{print $6,$7,$8}')
+  local -r NORMAL_PART_TYPE=$(sgdisk -L | grep '8300' | awk '{print $2,$3}')
+
   sgdisk -Z "${DISK}"
   sgdisk -n 0::+512M -t 0:ef00 -c "0:${EFI_PART_TYPE}" "${DISK}"
   sgdisk -n 0:: -t 0:8300 -c "0:${NORMAL_PART_TYPE}" "${DISK}"
@@ -89,6 +45,9 @@ partitioning() {
 }
 
 tarball_extract() {
+  local -r TARBALL_DIR='https://distfiles.gentoo.org/releases/amd64/autobuilds/current-stage3-amd64-systemd'
+  local -r STAGE_FILE=$(curl -sL "${TARBALL_DIR}" | grep 'tar.xz"' | awk -F '"' '{print $8}')
+
   cd /mnt/gentoo
   wget "${TARBALL_DIR}/${STAGE_FILE}"
   tar xpvf "${STAGE_FILE}" --xattrs-include='*.*' --numeric-owner
@@ -131,8 +90,7 @@ profile_package_installation() {
 
   [[ "${GPU}" == 'nvidia' ]] && chroot /mnt/gentoo emerge media-libs/nvidia-vaapi-driver
 
-  CPU_FLAGS=$(chroot /mnt/gentoo cpuid2cpuflags | sed 's/^CPU_FLAGS_X86: //')
-  readonly CPU_FLAGS
+  local -r CPU_FLAGS=$(chroot /mnt/gentoo cpuid2cpuflags | sed 's/^CPU_FLAGS_X86: //')
 
   chroot /mnt/gentoo sed -i -e "s/^# \(CPU_FLAGS_X86=\)/\1\"${CPU_FLAGS}\"/" /etc/portage/make.conf
   chroot /mnt/gentoo emerge -uDN @world
@@ -166,19 +124,17 @@ kernel_installation() {
 }
 
 fstab_configration() {
-  BOOT_PARTUUID=$(blkid -s PARTUUID -o value "${DISK}1")
-  readonly BOOT_PARTUUID
+  local -r BOOT_PARTUUID=$(blkid -s PARTUUID -o value "${DISK}1")
 
   ROOT_PARTUUID=$(blkid -s PARTUUID -o value "${DISK}2")
   readonly ROOT_PARTUUID
 
-  FSTAB=$(
+  local -r FSTAB=$(
     cat << EOF
 PARTUUID=${BOOT_PARTUUID} /boot vfat defaults,noatime,fmask=0077,dmask=0077 0 2
 PARTUUID=${ROOT_PARTUUID} /     ext4 defaults,noatime                       0 1
 EOF
   )
-  readonly FSTAB
 
   echo "${FSTAB}" >> /mnt/gentoo/etc/fstab
 }
@@ -189,19 +145,20 @@ systemd_configration() {
   chroot /mnt/gentoo systemctl preset-all
   chroot /mnt/gentoo bootctl install
 
-  MACHINE_ID=$(cat /mnt/gentoo/etc/machine-id)
-  readonly MACHINE_ID
+  local -r MACHINE_ID=$(cat /mnt/gentoo/etc/machine-id)
+  local -r VMLINUZ=$(find /mnt/gentoo/boot -iname '*vmlinuz*gentoo' -type f | awk -F '/' '{print $5}')
+  local -r UCODE=$(find /mnt/gentoo/boot -iname '*uc*' -type f | awk -F '/' '{print $5}')
+  local -r INITRAMFS=$(find /mnt/gentoo/boot -iname '*initramfs*gentoo*' -type f | awk -F '/' '{print $5}')
 
-  VMLINUZ=$(find /mnt/gentoo/boot -iname '*vmlinuz*gentoo' -type f | awk -F '/' '{print $5}')
-  readonly VMLINUZ
+  local -r LOADER_CONF=$(
+    cat << EOF
+timeout      10
+console-mode max
+editor       no
+EOF
+  )
 
-  UCODE=$(find /mnt/gentoo/boot -iname '*uc*' -type f | awk -F '/' '{print $5}')
-  readonly UCODE
-
-  INITRAMFS=$(find /mnt/gentoo/boot -iname '*initramfs*gentoo*' -type f | awk -F '/' '{print $5}')
-  readonly INITRAMFS
-
-  ENTRY_CONF=$(
+  local -r ENTRY_CONF=$(
     cat << EOF
 title      Gentoo
 linux      /${VMLINUZ}
@@ -211,7 +168,6 @@ machine-id ${MACHINE_ID}
 options    root=PARTUUID=${ROOT_PARTUUID} rw loglevel=3 panic=180
 EOF
   )
-  readonly ENTRY_CONF
 
   echo "${LOADER_CONF}" >> /mnt/gentoo/boot/loader/loader.conf
   echo "${ENTRY_CONF}" >> /mnt/gentoo/boot/loader/entries/gentoo.conf
@@ -232,6 +188,31 @@ user_setting() {
 }
 
 others_configration() {
+  local -r NET_INTERFACE=$(ip -br link show | awk 'NR==2 {print $1}')
+  local -r WIRED_NETWORK="[Match]
+Name=${NET_INTERFACE}
+
+[Network]
+DHCP=yes
+DNS=8.8.8.8
+DNS=8.8.4.4"
+
+  if [[ "${GPU}" == 'nvidia' ]]; then
+    local -r ENVIRONMENT="GTK_IM_MODULE='fcitx5'
+QT_IM_MODULE='fcitx5'
+XMODIFIERS='@im=fcitx5'
+
+LIBVA_DRIVER_NAME='nvidia'
+VDPAU_DRIVER='nvidia'"
+  elif [[ "${GPU}" == 'amd' ]]; then
+    local -r ENVIRONMENT="GTK_IM_MODULE='fcitx5'
+QT_IM_MODULE='fcitx5'
+XMODIFIERS='@im=fcitx5'
+
+LIBVA_DRIVER_NAME='radeonsi'
+VDPAU_DRIVER='radeonsi'"
+  fi
+
   # Network
   echo 'virtualbox' > /mnt/gentoo/etc/hostname
   echo "${WIRED_NETWORK}" >> /mnt/gentoo/etc/systemd/network/20-wired.network
