@@ -31,18 +31,13 @@ readonly BUILD_JOBS
 NET_INTERFACE=$(ip -br link show | awk 'NR==2 {print $1}')
 readonly NET_INTERFACE
 
-WIRED_NETWORK=$(
-  cat << EOF
-[Match]
+readonly WIRED_NETWORK="[Match]
 Name=${NET_INTERFACE}
 
 [Network]
 DHCP=yes
 DNS=8.8.8.8
-DNS=8.8.4.4
-EOF
-)
-readonly WIRED_NETWORK
+DNS=8.8.4.4"
 
 SCRIPT_DIR=$(
   cd "$(dirname "${0}")"
@@ -75,10 +70,16 @@ LIBVA_DRIVER_NAME='radeonsi'
 VDPAU_DRIVER='radeonsi'"
 fi
 
+EFI_PART_TYPE=$(sgdisk -L | grep 'ef00' | awk '{print $6,$7,$8}')
+readonly EFI_PART_TYPE
+
+NORMAL_PART_TYPE=$(sgdisk -L | grep '8300' | awk '{print $2,$3}')
+readonly NORMAL_PART_TYPE
+
 partitioning() {
   sgdisk -Z "${DISK}"
-  sgdisk -n 0::+512M -t 0:ef00 -c '0:EFI system partition' "${DISK}"
-  sgdisk -n 0:: -t 0:8300 -c '0:Linux filesystem' "${DISK}"
+  sgdisk -n 0::+512M -t 0:ef00 -c "0:${EFI_PART_TYPE}" "${DISK}"
+  sgdisk -n 0:: -t 0:8300 -c "0:${NORMAL_PART_TYPE}" "${DISK}"
 
   mkfs.vfat -F 32 "${DISK}1"
   mkfs.ext4 "${DISK}2"

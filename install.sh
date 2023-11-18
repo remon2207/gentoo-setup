@@ -31,17 +31,12 @@ readonly BUILD_JOBS
 NET_INTERFACE=$(ip -br link show | awk 'NR==2 {print $1}')
 readonly NET_INTERFACE
 
-WIRED_NETWORK=$(
-  cat << EOF
-[Match]
+readonly WIRED_NETWORK="[Match]
 Name=${NET_INTERFACE}
 
 [Network]
 DHCP=yes
-DNS=192.168.1.202
-EOF
-)
-readonly WIRED_NETWORK
+DNS=192.168.1.202"
 
 SCRIPT_DIR=$(
   cd "$(dirname "${0}")"
