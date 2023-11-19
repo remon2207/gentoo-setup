@@ -187,7 +187,7 @@ VDPAU_DRIVER='radeonsi'"
   chroot /mnt/gentoo sed -i -e 's/^#\(NTP=\)/\1ntp.nict.jp/' -e \
     's/^#\(FallbackNTP=\).*/\1ntp1.jst.mfeed.ad.jp ntp2.jst.mfeed.ad.jp ntp3.jst.mfeed.ad.jp/' /etc/systemd/timesyncd.conf
 
-  rm /mnt/gentoo/stage3-*.tar.xz
+  rm -rf /mnt/gentoo/stage3-*.tar.xz
 }
 
 main() {
