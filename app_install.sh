@@ -54,11 +54,10 @@ fstab_configration() {
 # ramdisk
 tmpfs /tmp               tmpfs rw,nodev,nosuid,noatime,size=4G,mode=1777                   0 0
 tmpfs /var/tmp/portage   tmpfs rw,nodev,nosuid,noatime,size=8G                             0 0
-tmpfs /home/remon/.cache tmpfs rw,nodev,nosuid,noatime,size=8G,mode=0755,uid=1000,gid=1000 0 0
+tmpfs ${USER}/.cache tmpfs rw,nodev,nosuid,noatime,size=8G,mode=0755,uid=1000,gid=1000 0 0
 EOF
   )"
 
-  # echo "${CACHE_FSTAB}" >> /mnt/gentoo/etc/fstab
   echo "${CACHE_FSTAB}" | sudo tee -a /etc/fstab
 }
 
