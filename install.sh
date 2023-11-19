@@ -15,7 +15,7 @@ OPTIONS:
 EOF
 }
 
-if [[ ${#} -eq 0 ]]; then
+if [[ ${#} -ne 10 ]]; then
   usage
   exit 1
 fi
