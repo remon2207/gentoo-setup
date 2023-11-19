@@ -15,9 +15,11 @@ EOF
 if [[ ${#} -ne 4 ]]; then
   usage
   exit 1
-elif [[ "${1}" == '--disk' ]] && [[ "${3}" == '--gpu' ]]; then
+elif [[ "${1}" == '--disk' ]] && [[ "${3}" == '--gpu' ]] && [[ "${5}" == '--userpassword' ]] && [[ "${7}" == '--rootpassword' ]]; then
   readonly DISK="${2}"
   readonly GPU="${4}"
+  readonly USER_PASSWORD="${6}"
+  readonly ROOT_PASSWORD="${8}"
 fi
 
 BUILD_JOBS="$(($(nproc) + 1))"
@@ -177,14 +179,8 @@ user_setting() {
   local -r USER_NAME='virt'
 
   chroot /mnt/gentoo useradd -m -G wheel -s /bin/bash "${USER_NAME}"
-  echo '====================================================='
-  echo 'Password of User'
-  echo '====================================================='
-  chroot /mnt/gentoo passwd "${USER_NAME}"
-  echo '====================================================='
-  echo 'Password of root'
-  echo '====================================================='
-  chroot /mnt/gentoo passwd
+  echo "${USER_NAME}:${USER_PASSWORD}" | chroot /mnt/gentoo chpasswd
+  echo "root:${ROOT_PASSWORD}" | chroot /mnt/gentoo chpasswd
 }
 
 others_configration() {
