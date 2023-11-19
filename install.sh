@@ -5,22 +5,61 @@ set -eu
 usage() {
   cat << EOF
 USAGE:
-  ${0} --disk <disk> --gpu <nvidia | amd>
+  ${0} <OPTIONS>
 OPTIONS:
-  --disk    Path of disk
-  --gpu     [nvidia, amd]
+  --disk                Path of disk
+  --microcode           [intel, amd]
+  --gpu                 [nvidia, amd]
+  --user-password       Password of user
+  --root-password       Password of root
 EOF
 }
 
-if [[ ${#} -ne 4 ]]; then
+if [[ ${#} -eq 0 ]]; then
   usage
   exit 1
-elif [[ "${1}" == '--disk' ]] && [[ "${3}" == '--gpu' ]] && [[ "${5}" == '--userpassword' ]] && [[ "${7}" == '--rootpassword' ]]; then
-  readonly DISK="${2}"
-  readonly GPU="${4}"
-  readonly USER_PASSWORD="${6}"
-  readonly ROOT_PASSWORD="${8}"
 fi
+
+readonly OPT_STR='disk:,microcode:,gpu:,user-password:,root-password:,help'
+
+PARAMS="$(getopt -o '' -l "${OPT_STR}" -- "${@}")"
+readonly PARAMS
+
+eval set -- "${PARAMS}"
+
+while true; do
+  case "${1}" in
+  '--disk')
+    readonly DISK="${2}"
+    shift
+    ;;
+  '--microcode')
+    readonly MICROCODE="${2}"
+    shift
+    ;;
+  '--gpu')
+    readonly GPU="${2}"
+    shift
+    ;;
+  '--user-password')
+    readonly USER_PASSWORD="${2}"
+    shift
+    ;;
+  '--root-password')
+    readonly ROOT_PASSWORD="${2}"
+    shift
+    ;;
+  '--help')
+    usage
+    exit 1
+    ;;
+  '--')
+    shift
+    break
+    ;;
+  esac
+  shift
+done
 
 BUILD_JOBS="$(($(nproc) + 1))"
 readonly BUILD_JOBS
@@ -52,8 +91,13 @@ portage_configration() {
   \cp -a "${SCRIPT_DIR}"/{make.conf,package.{use,license,accept_keywords}} /mnt/gentoo/etc/portage
 
   mkdir /mnt/gentoo/etc/portage/repos.conf
-  cp /mnt/gentoo/usr/share/portage/config/repos.conf /mnt/gentoo/etc/portage/repos.conf/gentoo.conf
-  cp -L /etc/resolv.conf /mnt/gentoo/etc/
+  \cp /mnt/gentoo/usr/share/portage/config/repos.conf /mnt/gentoo/etc/portage/repos.conf/gentoo.conf
+  \cp -L /etc/resolv.conf /mnt/gentoo/etc/
+
+  if [[ "${MICROCODE}" == 'amd' ]]; then
+    echo 'sys-kernel/linux-firmware initramfs' > /mnt/gentoo/etc/portage/package.use/linux-firmware > /dev/null 2>&1
+    \rm -rf /mnt/gentoo/etc/portage/package.use/intel-microcode
+  fi
 
   chroot /mnt/gentoo sed -i -e "s/^\(MAKEOPTS=\"-j\).*/\1${BUILD_JOBS}\"/" -e \
     's/^\(CPU_FLAGS_X86=\).*/# \1/' -e \
@@ -106,11 +150,16 @@ localization() {
 }
 
 kernel_installation() {
-  chroot /mnt/gentoo emerge sys-kernel/{linux-firmware,gentoo-sources,dracut} sys-firmware/intel-microcode
+  if [[ "${MICROCODE}" == 'intel' ]]; then
+    chroot /mnt/gentoo emerge sys-kernel/{linux-firmware,gentoo-sources,dracut} sys-firmware/intel-microcode
+  elif [[ "${MICROCODE}" == 'amd' ]]; then
+    chroot /mnt/gentoo emerge sys-kernel/{linux-firmware,gentoo-sources,dracut}
+  fi
+
   chroot /mnt/gentoo eselect kernel set 1
 
-  cp -a "${SCRIPT_DIR}/kernel_conf" /mnt/gentoo/usr/src/linux/.config
-  chroot /mnt/gentoo bash -c 'cd /usr/src/linux && make oldconfig'
+  \cp -a "${SCRIPT_DIR}/kernel_conf" /mnt/gentoo/usr/src/linux/.config
+  chroot /mnt/gentoo bash -c 'cd /usr/src/linux && make oldconfig && make menuconfig'
   chroot /mnt/gentoo bash -c "cd /usr/src/linux && make -j${BUILD_JOBS} && make modules_install && make install"
   chroot /mnt/gentoo dracut --kver "$(uname -r | awk -F '-' '{print $1}')-gentoo" --no-kernel
 
@@ -186,7 +235,7 @@ VDPAU_DRIVER='radeonsi'"
   chroot /mnt/gentoo emerge app-admin/sudo
   chroot /mnt/gentoo sed -e 's/^# \(%wheel ALL=(ALL:ALL) ALL\)/\1/' /etc/sudoers | EDITOR='tee' chroot /mnt/gentoo visudo &> /dev/null
 
-  rm -rf /mnt/gentoo/stage3-*.tar.xz
+  \rm -rf /mnt/gentoo/stage3-*.tar.xz
 }
 
 main() {
