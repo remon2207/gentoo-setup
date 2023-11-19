@@ -109,7 +109,10 @@ portage_configration() {
   \cp /mnt/gentoo/usr/share/portage/config/repos.conf /mnt/gentoo/etc/portage/repos.conf/gentoo.conf
   \cp -L /etc/resolv.conf /mnt/gentoo/etc/
 
-  if [[ "${MICROCODE}" == 'amd' ]]; then
+  if [[ "${MICROCODE}" == 'intel' ]]; then
+    echo 'sys-firmware/intel-microcode initramfs' > /mnt/gentoo/etc/portage/package.use/intel-microcode > /dev/null 2>&1
+    \rm -rf /mnt/gentoo/etc/portage/package.use/linux-firmware
+  elif [[ "${MICROCODE}" == 'amd' ]]; then
     echo 'sys-kernel/linux-firmware initramfs' > /mnt/gentoo/etc/portage/package.use/linux-firmware > /dev/null 2>&1
     \rm -rf /mnt/gentoo/etc/portage/package.use/intel-microcode
   fi
@@ -117,6 +120,11 @@ portage_configration() {
   chroot /mnt/gentoo sed -i -e "s/^\(MAKEOPTS=\"-j\).*/\1${BUILD_JOBS}\"/" -e \
     's/^\(CPU_FLAGS_X86=\).*/# \1/' -e \
     's/^\(USE=".*\) pulseaudio/\1/' /etc/portage/make.conf
+  if [[ "${GPU}" == 'nvidia' ]]; then
+    chroot /mnt/gentoo sed -i -e 's/^\(VIDEO_CARDS=\).*/\1"nvidia virtualbox"/' /etc/portage/make.conf
+  elif [[ "${GPU}" == 'amd' ]]; then
+    chroot /mnt/gentoo sed -i -e 's/^\(VIDEO_CARDS=\).*/\1"amdgpu radeonsi virtualbox"/' /etc/portage/make.conf
+  fi
 }
 
 mounting() {
