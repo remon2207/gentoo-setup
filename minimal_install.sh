@@ -61,6 +61,14 @@ while true; do
   shift
 done
 
+if [[ "${MICROCODE}" != 'intel' ]] && [[ "${MICROCODE}" != 'amd' ]]; then
+  echo 'microcode error'
+  exit 1
+elif [[ "${GPU}" != 'nvidia' ]] && [[ "${GPU}" != 'amd' ]]; then
+  echo 'gpu error'
+  exit 1
+fi
+
 BUILD_JOBS="$(($(nproc) + 1))"
 readonly BUILD_JOBS
 
