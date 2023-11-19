@@ -188,7 +188,7 @@ VDPAU_DRIVER='radeonsi'"
     's/^#\(FallbackNTP=\).*/\1ntp1.jst.mfeed.ad.jp ntp2.jst.mfeed.ad.jp ntp3.jst.mfeed.ad.jp/' /etc/systemd/timesyncd.conf
 
   chroot /mnt/gentoo emerge app-admin/sudo
-  chroot /mnt/gentoo sed -e 's/^# \(%wheel ALL=(ALL:ALL) ALL\)/\1/' /etc/sudoers | EDITOR='tee' chroot /mnt/gentoo visudo
+  chroot /mnt/gentoo sed -e 's/^# \(%wheel ALL=(ALL:ALL) ALL\)/\1/' /etc/sudoers | EDITOR='tee' chroot /mnt/gentoo visudo &> /dev/null
 
   rm -rf /mnt/gentoo/stage3-*.tar.xz
 }
