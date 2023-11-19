@@ -65,10 +65,16 @@ EOF
   echo "${CACHE_FSTAB}" | sudo tee -a /etc/fstab
 }
 
+other() {
+  ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
+  rm -rf "${0}"
+}
+
 main() {
   pkgs_installation
   group_configration
   fstab_configration
+  other
 }
 
 main "${@}"
