@@ -12,7 +12,6 @@ pkgs_installation() {
   sudo emerge media-video/{wireplumber,pipewire} \
     media-sound/{pulseaudio,pavucontrol} \
     media-libs/{libpulse,nvidia-vaapi-driver} \
-    app-admin/sudo \
     app-containers/docker{,-cli} \
     app-emulation/virtualbox{,-additions,-guest-additions,-extpack-oracle} \
     app-i18n/{fcitx{,-configtool,-gtk,-qt}:5,mozc} \
