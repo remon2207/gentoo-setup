@@ -7,7 +7,7 @@ pkgs_installation() {
   sudo eselect repository enable guru gentoo-zh
   sudo eselect repository add remon-overlay git https://github.com/remon2207/remon-overlay.git
 
-  for repos in guru gentoo-zh remon-overlay; do emaint sync -r "${repos}"; done
+  for repos in guru gentoo-zh remon-overlay; do sudo emaint sync -r "${repos}"; done
 
   sudo emerge media-video/{wireplumber,pipewire} \
     media-sound/{pulseaudio,pavucontrol} \
@@ -58,7 +58,8 @@ tmpfs /home/remon/.cache tmpfs rw,nodev,nosuid,noatime,size=8G,mode=0755,uid=100
 EOF
   )"
 
-  echo "${CACHE_FSTAB}" >> /mnt/gentoo/etc/fstab
+  # echo "${CACHE_FSTAB}" >> /mnt/gentoo/etc/fstab
+  echo "${CACHE_FSTAB}" | sudo tee -a /etc/fstab
 }
 
 main() {
