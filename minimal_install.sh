@@ -62,10 +62,10 @@ while true; do
 done
 
 if [[ "${MICROCODE}" != 'intel' ]] && [[ "${MICROCODE}" != 'amd' ]]; then
-  echo 'microcode error'
+  echo -e '\e[31mmicrocode typo\e[m'
   exit 1
 elif [[ "${GPU}" != 'nvidia' ]] && [[ "${GPU}" != 'amd' ]]; then
-  echo 'gpu error'
+  echo -e '\e[31mgpu typo\e[m'
   exit 1
 fi
 
