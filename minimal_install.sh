@@ -111,6 +111,7 @@ portage_configration() {
 
   if [[ "${MICROCODE}" == 'amd' ]]; then
     echo 'sys-kernel/linux-firmware initramfs' > /mnt/gentoo/etc/portage/package.use/linux-firmware > /dev/null 2>&1
+    \rm -rf /mnt/gentoo/etc/portage/package.use/intel-microcode
   fi
 
   chroot /mnt/gentoo sed -i -e "s/^\(MAKEOPTS=\"-j\).*/\1${BUILD_JOBS}\"/" -e \
@@ -204,9 +205,9 @@ systemd_configration() {
   chroot /mnt/gentoo bootctl install
 
   local -r MACHINE_ID="$(cat /mnt/gentoo/etc/machine-id)"
-  local -r VMLINUZ="$(find /mnt/gentoo/boot -iname '*vmlinuz*gentoo' -type f | awk -F '/' '{print $5}')"
-  local -r UCODE="$(find /mnt/gentoo/boot -iname '*uc*' -type f | awk -F '/' '{print $5}')"
-  local -r INITRAMFS="$(find /mnt/gentoo/boot -iname '*initramfs*gentoo*' -type f | awk -F '/' '{print $5}')"
+  local -r VMLINUZ="$(find /mnt/gentoo/boot -name '*vmlinuz*gentoo' -type f | awk -F '/' '{print $5}')"
+  local -r UCODE="$(find /mnt/gentoo/boot -name '*uc*' -type f | awk -F '/' '{print $5}')"
+  local -r INITRAMFS="$(find /mnt/gentoo/boot -name '*initramfs*gentoo*' -type f | awk -F '/' '{print $5}')"
 
   local -r LOADER_CONF="$(
     cat << EOF
