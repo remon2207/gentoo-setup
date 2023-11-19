@@ -38,7 +38,7 @@ pkgs_installation() {
     x11-themes/{arc-theme,breezex-xcursors,kvantum,papirus-icon-theme} \
     x11-wm/i3
 
-  sudo sed -i -e 's/^USE="/& pulseaudio/' /etc/portage/make.conf
+  sudo sed -i -e 's/^USE="/&pulseaudio /' /etc/portage/make.conf
   sudo emerge -uDN @world
 }
 
