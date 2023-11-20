@@ -166,11 +166,9 @@ localization() {
 }
 
 kernel_installation() {
-  if [[ "${MICROCODE}" == 'intel' ]]; then
-    chroot /mnt/gentoo emerge sys-kernel/{linux-firmware,gentoo-sources,dracut} sys-firmware/intel-microcode
-  elif [[ "${MICROCODE}" == 'amd' ]]; then
-    chroot /mnt/gentoo emerge sys-kernel/{linux-firmware,gentoo-sources,dracut}
-  fi
+  chroot /mnt/gentoo emerge sys-kernel/{linux-firmware,gentoo-sources,dracut}
+
+  [[ "${MICROCODE}" == 'intel' ]] && chroot /mnt/gentoo emerge sys-firmware/intel-microcode
 
   chroot /mnt/gentoo eselect kernel set 1
 
