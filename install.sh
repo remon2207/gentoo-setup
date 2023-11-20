@@ -113,10 +113,10 @@ portage_configration() {
   chroot /mnt/gentoo sed -i -e "s/^\(MAKEOPTS=\"-j\).*/\1${BUILD_JOBS}\"/" -e \
     's/^\(CPU_FLAGS_X86=\).*/# \1/' -e \
     's/^\(USE=".*\) pulseaudio/\1/' /etc/portage/make.conf
-  if [[ "${GPU}" == 'nvidia' ]]; then
-    chroot /mnt/gentoo sed -i -e 's/^\(VIDEO_CARDS=\).*/\1"nvidia virtualbox"/' /etc/portage/make.conf
-  elif [[ "${GPU}" == 'amd' ]]; then
-    chroot /mnt/gentoo sed -i -e 's/^\(VIDEO_CARDS=\).*/\1"amdgpu radeonsi virtualbox"/' /etc/portage/make.conf
+  if [[ "${GPU}" == 'amd' ]]; then
+    chroot /mnt/gentoo sed -i -e 's/^\(VIDEO_CARDS=\).*/\1"amdgpu radeonsi virtualbox"/' -e \
+      's/^\(USE=".*\)nvenc /\1/' -e \
+      's/^\(USE=".*\) nvidia/\1/' /etc/portage/make.conf
   fi
 }
 
