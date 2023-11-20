@@ -158,7 +158,7 @@ profile_package_installation() {
   if [[ "${GPU}" == 'nvidia' ]]; then
     chroot /mnt/gentoo emerge media-libs/nvidia-vaapi-driver
   elif [[ "${GPU}" == 'intel' ]]; then
-    echo 'media-libs/libva-intel-media-driver no-source-code' > /etc/portage/package.license/libva-intel-media-driver
+    echo 'media-libs/libva-intel-media-driver no-source-code' > /mnt/gentoo/etc/portage/package.license/libva-intel-media-driver
     chroot /mnt/gentoo emerge media-libs/libva-intel-media-driver
   fi
 
