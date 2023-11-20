@@ -14,9 +14,7 @@ pkgs_installation() {
     sudo emaint sync -r "${repos}"
   done
 
-  if [[ "${GPU}" == 'nvidia' ]]; then
-    sudo emerge media-libs/nvidia-vaapi-driver
-  elif [[ "${GPU}" == 'amdgpu' ]] || [[ "${GPU}" == 'intel' ]]; then
+  if [[ "${GPU}" == 'amdgpu' ]] || [[ "${GPU}" == 'intel' ]]; then
     echo 'media-video/ffmpeg-chromium vdpau vulkan vaapi' | sudo tee /etc/portage/package.use/ffmpeg-chromium
   fi
 
