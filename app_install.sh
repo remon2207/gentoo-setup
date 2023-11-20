@@ -49,6 +49,7 @@ pkgs_installation() {
 
   sudo sed -i -e 's/^USE="/&pulseaudio /' /etc/portage/make.conf
   sudo emerge -uDN @world
+  sudo emerge --depclean
 }
 
 group_configration() {
