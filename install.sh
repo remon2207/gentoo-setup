@@ -100,7 +100,7 @@ portage_configration() {
 
   mkdir /mnt/gentoo/etc/portage/repos.conf
   \cp /mnt/gentoo/usr/share/portage/config/repos.conf /mnt/gentoo/etc/portage/repos.conf/gentoo.conf
-  \cp -L /etc/resolv.conf /mnt/gentoo/etc/
+  \cp -L /etc/resolv.conf /mnt/gentoo/etc
 
   if [[ "${MICROCODE}" == 'intel' ]]; then
     echo 'sys-firmware/intel-microcode initramfs' > /mnt/gentoo/etc/portage/package.use/intel-microcode > /dev/null 2>&1

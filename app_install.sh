@@ -16,7 +16,7 @@ pkgs_installation() {
 
   if [[ "${GPU}" == 'nvidia' ]]; then
     sudo emerge media-libs/nvidia-vaapi-driver
-  elif [[ "${GPU}" == 'amdgpu' ]]; then
+  elif [[ "${GPU}" == 'amdgpu' ]] || [[ "${GPU}" == 'intel' ]]; then
     echo 'media-video/ffmpeg-chromium vdpau vulkan vaapi' | sudo tee /etc/portage/package.use/ffmpeg-chromium
   fi
 
@@ -53,11 +53,9 @@ pkgs_installation() {
 }
 
 group_configration() {
-  for groups in pipewire vboxguest vboxusers; do
+  for groups in video pipewire vboxguest vboxusers; do
     sudo gpasswd -a "${USER}" "${groups}"
   done
-
-  [[ "${GPU}" == 'nvidia' ]] && sudo gpasswd -a "${USER}" video
 
   sudo systemctl enable {virtualbox-guest-additions,docker}.service
   systemctl --user disable pulseaudio.{socket,service}

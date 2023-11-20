@@ -9,7 +9,7 @@ USAGE:
 OPTIONS:
   --disk                Path of disk
   --microcode           [intel, amd]
-  --gpu                 [nvidia, amd]
+  --gpu                 [nvidia, amd, intel]
   --user-password       Password of user
   --root-password       Password of root
 EOF
@@ -64,7 +64,7 @@ done
 if [[ "${MICROCODE}" != 'intel' ]] && [[ "${MICROCODE}" != 'amd' ]]; then
   echo -e '\e[31mmicrocode typo\e[m'
   exit 1
-elif [[ "${GPU}" != 'nvidia' ]] && [[ "${GPU}" != 'amd' ]]; then
+elif [[ "${GPU}" != 'nvidia' ]] && [[ "${GPU}" != 'amd' ]] && [[ "${GPU}" != 'intel' ]]; then
   echo -e '\e[31mgpu typo\e[m'
   exit 1
 fi
@@ -107,7 +107,7 @@ portage_configration() {
 
   mkdir /mnt/gentoo/etc/portage/repos.conf
   \cp /mnt/gentoo/usr/share/portage/config/repos.conf /mnt/gentoo/etc/portage/repos.conf/gentoo.conf
-  \cp -L /etc/resolv.conf /mnt/gentoo/etc/
+  \cp -L /etc/resolv.conf /mnt/gentoo/etc
 
   if [[ "${MICROCODE}" == 'intel' ]]; then
     echo 'sys-firmware/intel-microcode initramfs' > /mnt/gentoo/etc/portage/package.use/intel-microcode > /dev/null 2>&1
@@ -120,10 +120,15 @@ portage_configration() {
   chroot /mnt/gentoo sed -i -e "s/^\(MAKEOPTS=\"-j\).*/\1${BUILD_JOBS}\"/" -e \
     's/^\(CPU_FLAGS_X86=\).*/# \1/' -e \
     's/^\(USE=".*\) pulseaudio/\1/' /etc/portage/make.conf
+
   if [[ "${GPU}" == 'amd' ]]; then
     chroot /mnt/gentoo sed -i -e 's/^\(VIDEO_CARDS=\).*/\1"amdgpu radeonsi virtualbox"/' -e \
       's/^\(USE=".*\)nvenc /\1/' -e \
-      's/^\(USE=".*\) nvidia/\1/' /etc/portage/make.conf
+      's/^\(USE=".*\)nvidia /\1/' /etc/portage/make.conf
+  elif [[ "${GPU}" == 'intel' ]]; then
+    chroot /mnt/gentoo sed -i -e 's/^\(VIDEO_CARDS=\).*/\1"intel"/' -e \
+      's/^\(USE=".*\)nvenc /\1/' -e \
+      's/^\(USE=".*\)nvidia /\1/' /etc/portage/make.conf
   fi
 }
 
@@ -150,7 +155,11 @@ profile_package_installation() {
   FEATURES='-ccache' chroot /mnt/gentoo emerge dev-util/ccache
   chroot /mnt/gentoo emerge app-portage/cpuid2cpuflags
 
-  [[ "${GPU}" == 'nvidia' ]] && chroot /mnt/gentoo emerge media-libs/nvidia-vaapi-driver
+  if [[ "${GPU}" == 'nvidia' ]]; then
+    chroot /mnt/gentoo emerge media-libs/nvidia-vaapi-driver
+  elif [[ "${GPU}" == 'intel' ]]; then
+    chroot /mnt/gentoo emerge media-libs/libva-intel-media-driver
+  fi
 
   local -r CPU_FLAGS="$(chroot /mnt/gentoo cpuid2cpuflags | sed 's/^CPU_FLAGS_X86: //')"
 
@@ -270,6 +279,13 @@ XMODIFIERS='@im=fcitx5'
 
 LIBVA_DRIVER_NAME='radeonsi'
 VDPAU_DRIVER='radeonsi'"
+  elif [[ "${GPU}" == 'intel' ]]; then
+    local -r ENVIRONMENT="GTK_IM_MODULE='fcitx5'
+QT_IM_MODULE='fcitx5'
+XMODIFIERS='@im=fcitx5'
+
+LIBVA_DRIVER_NAME='intel'
+VDPAU_DRIVER='intel'"
   fi
 
   # Network
