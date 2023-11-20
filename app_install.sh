@@ -2,6 +2,9 @@
 
 set -eu
 
+GPU="$(grep 'VIDEO_CARDS' /etc/portage/make.conf | awk -F '[" ]' '{print $2}')"
+readonly GPU
+
 pkgs_installation() {
   sudo emerge app-eselect/eselect-repository dev-vcs/git
   sudo eselect repository enable guru gentoo-zh
@@ -11,9 +14,15 @@ pkgs_installation() {
     sudo emaint sync -r "${repos}"
   done
 
+  if [[ "${GPU}" == 'nvidia' ]]; then
+    sudo emerge media-libs/nvidia-vaapi-driver
+  elif [[ "${GPU}" == 'amdgpu' ]]; then
+    echo 'media-video/ffmpeg-chromium vdpau vulkan vaapi' | sudo tee /etc/portage/package.use/ffmpeg-chromium
+  fi
+
   sudo emerge media-video/{wireplumber,pipewire} \
     media-sound/{pulseaudio,pavucontrol} \
-    media-libs/{libpulse,nvidia-vaapi-driver} \
+    media-libs/libpulse \
     app-containers/docker{,-cli} \
     app-emulation/virtualbox{,-additions,-guest-additions,-extpack-oracle} \
     app-i18n/{fcitx{,-configtool,-gtk,-qt}:5,mozc} \
@@ -43,9 +52,11 @@ pkgs_installation() {
 }
 
 group_configration() {
-  for groups in video pipewire vboxguest vboxusers; do
+  for groups in pipewire vboxguest vboxusers; do
     sudo gpasswd -a "${USER}" "${groups}"
   done
+
+  [[ "${GPU}" == 'nvidia' ]] && sudo gpasswd -a "${USER}" video
 
   sudo systemctl enable {virtualbox-guest-additions,docker}.service
   systemctl --user disable pulseaudio.{socket,service}
