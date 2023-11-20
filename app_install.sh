@@ -78,6 +78,7 @@ EOF
 
 other() {
   ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
+  cp -a /etc/X11/xinit/xinitrc "${HOME}/.xinitrc"
   rm -rf "${0}"
 }
 
