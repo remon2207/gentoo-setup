@@ -21,6 +21,15 @@ if [[ ${#} -ne 10 ]]; then
   exit 1
 fi
 
+BUILD_JOBS="$(($(nproc) + 1))"
+readonly BUILD_JOBS
+
+SCRIPT_DIR="$(
+  cd "$(dirname "${0}")"
+  pwd
+)"
+readonly SCRIPT_DIR
+
 while getopts 'd:m:g:u:r:h' opt; do
   case "${opt}" in
   'd')
@@ -49,22 +58,15 @@ while getopts 'd:m:g:u:r:h' opt; do
   esac
 done
 
-if [[ "${MICROCODE}" != 'intel' ]] && [[ "${MICROCODE}" != 'amd' ]]; then
-  echo -e '\e[31mmicrocode typo\e[m'
-  exit 1
-elif [[ "${GPU}" != 'nvidia' ]] && [[ "${GPU}" != 'amd' ]]; then
-  echo -e '\e[31mgpu typo\e[m'
-  exit 1
-fi
-
-BUILD_JOBS="$(($(nproc) + 1))"
-readonly BUILD_JOBS
-
-SCRIPT_DIR="$(
-  cd "$(dirname "${0}")"
-  pwd
-)"
-readonly SCRIPT_DIR
+check_variables() {
+  if [[ "${MICROCODE}" != 'intel' ]] && [[ "${MICROCODE}" != 'amd' ]]; then
+    echo -e '\e[31mmicrocode typo\e[m'
+    exit 1
+  elif [[ "${GPU}" != 'nvidia' ]] && [[ "${GPU}" != 'amd' ]]; then
+    echo -e '\e[31mgpu typo\e[m'
+    exit 1
+  fi
+}
 
 partitioning() {
   mkfs.ext4 "${DISK}1"
@@ -241,6 +243,7 @@ VDPAU_DRIVER='radeonsi'"
 }
 
 main() {
+  check_variables
   partitioning
   tarball_extract
   portage_configration
