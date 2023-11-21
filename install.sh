@@ -7,11 +7,11 @@ usage() {
 USAGE:
   ${0} <OPTIONS>
 OPTIONS:
-  --disk                Path of disk
-  --microcode           [intel, amd]
-  --gpu                 [nvidia, amd]
-  --user-password       Password of user
-  --root-password       Password of root
+  -d        Path of disk
+  -m        [intel, amd]
+  -g        [nvidia, amd]
+  -u        Password of user
+  -r        Password of root
 EOF
 }
 
@@ -20,45 +20,32 @@ if [[ ${#} -ne 10 ]]; then
   exit 1
 fi
 
-readonly OPT_STR='disk:,microcode:,gpu:,user-password:,root-password:,help'
-
-PARAMS="$(getopt -o '' -l "${OPT_STR}" -- "${@}")"
-readonly PARAMS
-
-eval set -- "${PARAMS}"
-
-while true; do
-  case "${1}" in
-  '--disk')
-    readonly DISK="${2}"
-    shift
+while getopts 'd:m:g:u:r:h' opt; do
+  case "${opt}" in
+  'd')
+    readonly DISK="${OPTARG}"
     ;;
-  '--microcode')
-    readonly MICROCODE="${2}"
-    shift
+  'm')
+    readonly MICROCODE="${OPTARG}"
     ;;
-  '--gpu')
-    readonly GPU="${2}"
-    shift
+  'g')
+    readonly GPU="${OPTARG}"
     ;;
-  '--user-password')
-    readonly USER_PASSWORD="${2}"
-    shift
+  'u')
+    readonly USER_PASSWORD="${OPTARG}"
     ;;
-  '--root-password')
-    readonly ROOT_PASSWORD="${2}"
-    shift
+  'r')
+    readonly ROOT_PASSWORD="${OPTARG}"
     ;;
-  '--help')
+  'h')
     usage
     exit 1
     ;;
-  '--')
-    shift
-    break
+  '*')
+    usage
+    exit 1
     ;;
   esac
-  shift
 done
 
 if [[ "${MICROCODE}" != 'intel' ]] && [[ "${MICROCODE}" != 'amd' ]]; then
