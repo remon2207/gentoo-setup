@@ -12,6 +12,7 @@ OPTIONS:
   -g        [nvidia, amd]
   -u        Password of user
   -r        Password of root
+  -h        See Help
 EOF
 }
 
