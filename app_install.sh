@@ -2,9 +2,6 @@
 
 set -eu
 
-GPU="$(grep 'VIDEO_CARDS' /etc/portage/make.conf | awk -F '[" ]' '{print $2}')"
-readonly GPU
-
 pkgs_installation() {
   sudo emerge app-eselect/eselect-repository dev-vcs/git
   sudo eselect repository enable guru gentoo-zh
@@ -13,10 +10,6 @@ pkgs_installation() {
   for repos in guru gentoo-zh remon-overlay; do
     sudo emaint sync -r "${repos}"
   done
-
-  if [[ "${GPU}" == 'amdgpu' ]] || [[ "${GPU}" == 'intel' ]]; then
-    echo 'media-video/ffmpeg-chromium vdpau vulkan vaapi' | sudo tee /etc/portage/package.use/ffmpeg-chromium
-  fi
 
   sudo emerge media-video/{wireplumber,pipewire} \
     media-sound/{pulseaudio,pavucontrol} \
@@ -76,7 +69,7 @@ EOF
 other() {
   ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
   cp -a /etc/X11/xinit/xinitrc "${HOME}/.xinitrc"
-  rm -rf "${0}"
+  rm -rf /tmp /var/tmp/portage "${HOME}/.cache"
 }
 
 main() {
