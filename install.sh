@@ -76,7 +76,7 @@ tarball_extract() {
 }
 
 portage_configration() {
-  cp -a "${SCRIPT_DIR}"/{make.conf,package.{use,license,accept_keywords}} /mnt/gentoo/etc/portage
+  cp -a "${SCRIPT_DIR}/"{make.conf,package.{use,license,accept_keywords}} /mnt/gentoo/etc/portage
 
   mkdir /mnt/gentoo/etc/portage/repos.conf
   cp /mnt/gentoo/usr/share/portage/config/repos.conf /mnt/gentoo/etc/portage/repos.conf/gentoo.conf
@@ -155,7 +155,7 @@ kernel_installation() {
 
   cp -a "${SCRIPT_DIR}/kernel_conf" /mnt/gentoo/usr/src/linux/.config
   to_gentoo bash -c 'cd /usr/src/linux && make oldconfig && make menuconfig'
-  to_gentoo bash -c "cd /usr/src/linux && make -j${BUILD_JOBS} && make modules_install && make install"
+  to_gentoo bash -c "cd /usr/src/linux && make -j${BUILD_JOBS} && make modules_install; make install"
   to_gentoo dracut --kver "$(uname -r | awk -F '-' '{print $1}')-gentoo" --no-kernel
 
   to_gentoo emerge -uDN @world

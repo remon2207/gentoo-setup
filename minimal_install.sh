@@ -36,7 +36,7 @@ tarball_extract() {
 }
 
 portage_configration() {
-  cp -a "${SCRIPT_DIR}"/{make.conf,package.{use,license,accept_keywords}} /mnt/gentoo/etc/portage
+  cp -a "${SCRIPT_DIR}/"{make.conf,package.{use,license,accept_keywords}} /mnt/gentoo/etc/portage
 
   mkdir /mnt/gentoo/etc/portage/repos.conf
   cp /mnt/gentoo/usr/share/portage/config/repos.conf /mnt/gentoo/etc/portage/repos.conf/gentoo.conf
@@ -110,7 +110,7 @@ kernel_installation() {
 
   cp -a "${SCRIPT_DIR}/kernel_conf" /mnt/gentoo/usr/src/linux/.config
   to_gentoo bash -c 'cd /usr/src/linux && make oldconfig && make menuconfig'
-  to_gentoo bash -c "cd /usr/src/linux && make -j${BUILD_JOBS} && make modules_install && make install"
+  to_gentoo bash -c "cd /usr/src/linux && make -j${BUILD_JOBS} && make modules_install; make install"
   to_gentoo dracut --kver "$(uname -r | awk -F '-' '{print $1}')-gentoo" --no-kernel
 
   to_gentoo emerge -uDN @world
@@ -139,12 +139,12 @@ systemd_configration() {
   to_gentoo systemctl preset-all
   to_gentoo bootctl install
 
-  find_boot() { find /mnt/gentoo/boot "${@}"; }
+  find_boot() { find /mnt/gentoo/boot -type f -name "${1}"; }
 
   local -r MACHINE_ID="$(cat /mnt/gentoo/etc/machine-id)"
-  local -r VMLINUZ="$(find_boot -name '*vmlinuz*gentoo' -type f | awk -F '/' '{print $5}')"
-  local -r UCODE="$(find_boot -name '*uc*' -type f | awk -F '/' '{print $5}')"
-  local -r INITRAMFS="$(find_boot -name '*initramfs*gentoo*' -type f | awk -F '/' '{print $5}')"
+  local -r VMLINUZ="$(find_boot '*vmlinuz*gentoo' | awk -F '/' '{print $5}')"
+  local -r UCODE="$(find_boot '*uc*' | awk -F '/' '{print $5}')"
+  local -r INITRAMFS="$(find_boot '*initramfs*gentoo*' | awk -F '/' '{print $5}')"
 
   local -r LOADER_CONF="$(
     cat << EOF
