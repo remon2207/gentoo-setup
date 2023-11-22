@@ -40,7 +40,7 @@ while getopts 'd:g:u:r:h' opt; do
     readonly ROOT_PASSWORD="${OPTARG}"
     ;;
   'h')
-    usage
+    usage && exit 0
     ;;
   *)
     usage && exit 1
