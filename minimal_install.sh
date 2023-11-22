@@ -9,14 +9,14 @@ USAGE:
 OPTIONS:
   -d        Path of disk
   -m        [intel, amd]
-  -g        [nvidia, amd]
+  -g        [intel, amd]
   -u        Password of user
   -r        Password of root
-  -h        See help
+  -h        See Help
 EOF
 }
 
-if [[ ${#} -ne 10 ]]; then
+if [[ ${#} -eq 0 ]]; then
   usage
   exit 1
 fi
@@ -51,7 +51,7 @@ while getopts 'd:m:g:u:r:h' opt; do
     usage
     exit 0
     ;;
-  '*')
+  *)
     usage
     exit 1
     ;;
@@ -59,13 +59,22 @@ while getopts 'd:m:g:u:r:h' opt; do
 done
 
 check_variables() {
-  if [[ "${MICROCODE}" != 'intel' ]] && [[ "${MICROCODE}" != 'amd' ]]; then
+  case "${MICROCODE}" in
+  'intel') ;;
+  'amd') ;;
+  *)
     echo -e '\e[31mmicrocode typo\e[m'
     exit 1
-  elif [[ "${GPU}" != 'nvidia' ]] && [[ "${GPU}" != 'amd' ]] && [[ "${GPU}" != 'intel' ]]; then
+    ;;
+  esac
+  case "${GPU}" in
+  'intel') ;;
+  'amd') ;;
+  *)
     echo -e '\e[31mgpu typo\e[m'
     exit 1
-  fi
+    ;;
+  esac
 }
 
 partitioning() {
@@ -99,27 +108,33 @@ portage_configration() {
   \cp /mnt/gentoo/usr/share/portage/config/repos.conf /mnt/gentoo/etc/portage/repos.conf/gentoo.conf
   \cp -L /etc/resolv.conf /mnt/gentoo/etc
 
-  if [[ "${MICROCODE}" == 'intel' ]]; then
+  case "${MICROCODE}" in
+  'intel')
     echo 'sys-firmware/intel-microcode initramfs' > /mnt/gentoo/etc/portage/package.use/intel-microcode > /dev/null 2>&1
     \rm -rf /mnt/gentoo/etc/portage/package.use/linux-firmware
-  elif [[ "${MICROCODE}" == 'amd' ]]; then
+    ;;
+  'amd')
     echo 'sys-kernel/linux-firmware initramfs' > /mnt/gentoo/etc/portage/package.use/linux-firmware > /dev/null 2>&1
     \rm -rf /mnt/gentoo/etc/portage/package.use/intel-microcode
-  fi
+    ;;
+  esac
 
   chroot /mnt/gentoo sed -i -e "s/^\(MAKEOPTS=\"-j\).*/\1${BUILD_JOBS}\"/" -e \
     's/^\(CPU_FLAGS_X86=\).*/# \1/' -e \
     's/^\(USE=".*\) pulseaudio/\1/' /etc/portage/make.conf
 
-  if [[ "${GPU}" == 'amd' ]]; then
-    chroot /mnt/gentoo sed -i -e 's/^\(VIDEO_CARDS=\).*/\1"amdgpu radeonsi virtualbox"/' -e \
-      's/^\(USE=".*\)nvenc /\1/' -e \
-      's/^\(USE=".*\)nvidia /\1/' /etc/portage/make.conf
-  elif [[ "${GPU}" == 'intel' ]]; then
+  case "${GPU}" in
+  'intel')
     chroot /mnt/gentoo sed -i -e 's/^\(VIDEO_CARDS=\).*/\1"intel"/' -e \
       's/^\(USE=".*\)nvenc /\1/' -e \
       's/^\(USE=".*\)nvidia /\1/' /etc/portage/make.conf
-  fi
+    ;;
+  'amd')
+    chroot /mnt/gentoo sed -i -e 's/^\(VIDEO_CARDS=\).*/\1"amdgpu radeonsi virtualbox"/' -e \
+      's/^\(USE=".*\)nvenc /\1/' -e \
+      's/^\(USE=".*\)nvidia /\1/' /etc/portage/make.conf
+    ;;
+  esac
 }
 
 mounting() {
@@ -145,9 +160,7 @@ profile_package_installation() {
   FEATURES='-ccache' chroot /mnt/gentoo emerge dev-util/ccache
   chroot /mnt/gentoo emerge app-portage/cpuid2cpuflags
 
-  if [[ "${GPU}" == 'nvidia' ]]; then
-    chroot /mnt/gentoo emerge media-libs/nvidia-vaapi-driver
-  elif [[ "${GPU}" == 'intel' ]]; then
+  if [[ "${GPU}" == 'intel' ]]; then
     echo 'media-libs/libva-intel-media-driver no-source-code' > /mnt/gentoo/etc/portage/package.license/libva-intel-media-driver
     chroot /mnt/gentoo emerge media-libs/libva-intel-media-driver
   fi
@@ -256,28 +269,24 @@ DHCP=yes
 DNS=8.8.8.8
 DNS=8.8.4.4"
 
-  if [[ "${GPU}" == 'nvidia' ]]; then
-    local -r ENVIRONMENT="GTK_IM_MODULE='fcitx5'
-QT_IM_MODULE='fcitx5'
-XMODIFIERS='@im=fcitx5'
-
-LIBVA_DRIVER_NAME='nvidia'
-VDPAU_DRIVER='nvidia'"
-  elif [[ "${GPU}" == 'amd' ]]; then
-    local -r ENVIRONMENT="GTK_IM_MODULE='fcitx5'
-QT_IM_MODULE='fcitx5'
-XMODIFIERS='@im=fcitx5'
-
-LIBVA_DRIVER_NAME='radeonsi'
-VDPAU_DRIVER='radeonsi'"
-  elif [[ "${GPU}" == 'intel' ]]; then
+  case "${GPU}" in
+  'intel')
     local -r ENVIRONMENT="GTK_IM_MODULE='fcitx5'
 QT_IM_MODULE='fcitx5'
 XMODIFIERS='@im=fcitx5'
 
 LIBVA_DRIVER_NAME='intel'
 VDPAU_DRIVER='intel'"
-  fi
+    ;;
+  'amd')
+    local -r ENVIRONMENT="GTK_IM_MODULE='fcitx5'
+QT_IM_MODULE='fcitx5'
+XMODIFIERS='@im=fcitx5'
+
+LIBVA_DRIVER_NAME='radeonsi'
+VDPAU_DRIVER='radeonsi'"
+    ;;
+  esac
 
   # Network
   echo 'virtualbox' > /mnt/gentoo/etc/hostname

@@ -16,7 +16,7 @@ OPTIONS:
 EOF
 }
 
-if [[ ${#} -ne 10 ]]; then
+if [[ ${#} -eq 0 ]]; then
   usage
   exit 1
 fi
@@ -51,7 +51,7 @@ while getopts 'd:m:g:u:r:h' opt; do
     usage
     exit 0
     ;;
-  '*')
+  *)
     usage
     exit 1
     ;;
@@ -59,13 +59,22 @@ while getopts 'd:m:g:u:r:h' opt; do
 done
 
 check_variables() {
-  if [[ "${MICROCODE}" != 'intel' ]] && [[ "${MICROCODE}" != 'amd' ]]; then
+  case "${MICROCODE}" in
+  'intel') ;;
+  'amd') ;;
+  *)
     echo -e '\e[31mmicrocode typo\e[m'
     exit 1
-  elif [[ "${GPU}" != 'nvidia' ]] && [[ "${GPU}" != 'amd' ]]; then
+    ;;
+  esac
+  case "${GPU}" in
+  'nvidia') ;;
+  'amd') ;;
+  *)
     echo -e '\e[31mgpu typo\e[m'
     exit 1
-  fi
+    ;;
+  esac
 }
 
 partitioning() {
@@ -92,17 +101,21 @@ portage_configration() {
   \cp /mnt/gentoo/usr/share/portage/config/repos.conf /mnt/gentoo/etc/portage/repos.conf/gentoo.conf
   \cp -L /etc/resolv.conf /mnt/gentoo/etc
 
-  if [[ "${MICROCODE}" == 'intel' ]]; then
+  case "${MICROCODE}" in
+  'intel')
     echo 'sys-firmware/intel-microcode initramfs' > /mnt/gentoo/etc/portage/package.use/intel-microcode > /dev/null 2>&1
     \rm -rf /mnt/gentoo/etc/portage/package.use/linux-firmware
-  elif [[ "${MICROCODE}" == 'amd' ]]; then
+    ;;
+  'amd')
     echo 'sys-kernel/linux-firmware initramfs' > /mnt/gentoo/etc/portage/package.use/linux-firmware > /dev/null 2>&1
     \rm -rf /mnt/gentoo/etc/portage/package.use/intel-microcode
-  fi
+    ;;
+  esac
 
   chroot /mnt/gentoo sed -i -e "s/^\(MAKEOPTS=\"-j\).*/\1${BUILD_JOBS}\"/" -e \
     's/^\(CPU_FLAGS_X86=\).*/# \1/' -e \
     's/^\(USE=".*\) pulseaudio/\1/' /etc/portage/make.conf
+
   if [[ "${GPU}" == 'amd' ]]; then
     chroot /mnt/gentoo sed -i -e 's/^\(VIDEO_CARDS=\).*/\1"amdgpu radeonsi virtualbox"/' -e \
       's/^\(USE=".*\)nvenc /\1/' -e \
@@ -211,21 +224,24 @@ Name=${NET_INTERFACE}
 DHCP=yes
 DNS=192.168.1.202"
 
-  if [[ "${GPU}" == 'nvidia' ]]; then
+  case "${GPU}" in
+  'nvidia')
     local -r ENVIRONMENT="GTK_IM_MODULE='fcitx5'
 QT_IM_MODULE='fcitx5'
 XMODIFIERS='@im=fcitx5'
 
 LIBVA_DRIVER_NAME='nvidia'
 VDPAU_DRIVER='nvidia'"
-  elif [[ "${GPU}" == 'amd' ]]; then
+    ;;
+  'amd')
     local -r ENVIRONMENT="GTK_IM_MODULE='fcitx5'
 QT_IM_MODULE='fcitx5'
 XMODIFIERS='@im=fcitx5'
 
 LIBVA_DRIVER_NAME='radeonsi'
 VDPAU_DRIVER='radeonsi'"
-  fi
+    ;;
+  esac
 
   # Network
   echo 'gentoo' > /mnt/gentoo/etc/hostname
