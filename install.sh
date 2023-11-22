@@ -16,19 +16,10 @@ OPTIONS:
 EOF
 }
 
-if [[ ${#} -eq 0 ]]; then
-  usage
-  exit 1
-fi
+[[ ${#} -eq 0 ]] && usage && exit 1
 
-BUILD_JOBS="$(("$(nproc)" + 1))"
-readonly BUILD_JOBS
-
-SCRIPT_DIR="$(
-  cd "$(dirname "${0}")"
-  pwd
-)"
-readonly SCRIPT_DIR
+BUILD_JOBS="$(("$(nproc)" + 1))" && readonly BUILD_JOBS
+SCRIPT_DIR="$(cd "$(dirname "${0}")" && pwd)" && readonly SCRIPT_DIR
 
 while getopts 'd:m:g:u:r:h' opt; do
   case "${opt}" in
@@ -48,12 +39,10 @@ while getopts 'd:m:g:u:r:h' opt; do
     readonly ROOT_PASSWORD="${OPTARG}"
     ;;
   'h')
-    usage
-    exit 0
+    usage && exit 0
     ;;
   *)
-    usage
-    exit 1
+    usage && exit 1
     ;;
   esac
 done
@@ -63,16 +52,15 @@ check_variables() {
   'intel') ;;
   'amd') ;;
   *)
-    echo -e '\e[31mmicrocode typo\e[m'
-    exit 1
+    echo -e '\e[31mmicrocode typo\e[m' && exit 1
     ;;
   esac
+
   case "${GPU}" in
   'nvidia') ;;
   'amd') ;;
   *)
-    echo -e '\e[31mgpu typo\e[m'
-    exit 1
+    echo -e '\e[31mgpu typo\e[m' && exit 1
     ;;
   esac
 }
@@ -125,10 +113,7 @@ portage_configration() {
 
 mounting() {
   mount --types proc /proc /mnt/gentoo/proc
-  for dir in sys dev; do
-    mount --rbind "/${dir}" "/mnt/gentoo/${dir}"
-    mount --make-rslave "/mnt/gentoo/${dir}"
-  done
+  for dir in sys dev; do mount --rbind "/${dir}" "/mnt/gentoo/${dir}" && mount --make-rslave "/mnt/gentoo/${dir}"; done
   mount --bind /run /mnt/gentoo/run
   mount --make-slave /mnt/gentoo/run
 

@@ -7,9 +7,7 @@ pkgs_installation() {
   sudo eselect repository enable guru gentoo-zh
   sudo eselect repository add remon-overlay git https://github.com/remon2207/remon-overlay.git
 
-  for repos in guru gentoo-zh remon-overlay; do
-    sudo emaint sync -r "${repos}"
-  done
+  for repos in guru gentoo-zh remon-overlay; do sudo emaint sync -r "${repos}"; done
 
   sudo emerge media-video/{wireplumber,pipewire} \
     media-sound/{pulseaudio,pavucontrol} \
@@ -44,9 +42,7 @@ pkgs_installation() {
 }
 
 group_configration() {
-  for groups in video pipewire vboxguest vboxusers; do
-    sudo gpasswd -a "${USER}" "${groups}"
-  done
+  for groups in video pipewire vboxguest vboxusers; do sudo gpasswd -a "${USER}" "${groups}"; done
 
   sudo systemctl enable {virtualbox-guest-additions,docker}.service
   systemctl --user disable pulseaudio.{socket,service}
