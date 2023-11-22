@@ -68,10 +68,10 @@ partitioning() {
 
 tarball_extract() {
   local -r TARBALL_DIR='https://distfiles.gentoo.org/releases/amd64/autobuilds/current-stage3-amd64-systemd'
-  local -r STAGE_FILE="$(curl -sL "${TARBALL_DIR}" | grep 'tar.xz"' | awk -F '"' '{print $8}')"
+  local -r STAGE_FILE="$(curl -fsSL "${TARBALL_DIR}" | grep 'tar.xz"' | awk -F '"' '{print $8}')"
 
   cd /mnt/gentoo
-  wget "${TARBALL_DIR}/${STAGE_FILE}"
+  curl -fsSOL "${TARBALL_DIR}/${STAGE_FILE}"
   tar xpvf "${STAGE_FILE}" --xattrs-include='*.*' --numeric-owner
 }
 
@@ -93,12 +93,14 @@ portage_configration() {
     ;;
   esac
 
-  to_gentoo sed -i -e "s/^\(MAKEOPTS=\"-j\).*/\1${BUILD_JOBS}\"/" -e \
+  to_gentoo sed -i -e \
+    "s/^\(MAKEOPTS=\"-j\).*/\1${BUILD_JOBS}\"/" -e \
     's/^\(CPU_FLAGS_X86=\).*/# \1/' -e \
     's/^\(USE=".*\) pulseaudio/\1/' /etc/portage/make.conf
 
   if [[ "${GPU}" == 'amd' ]]; then
-    to_gentoo sed -i -e 's/^\(VIDEO_CARDS=\).*/\1"amdgpu radeonsi virtualbox"/' -e \
+    to_gentoo sed -i -e \
+      's/^\(VIDEO_CARDS=\).*/\1"amdgpu radeonsi virtualbox"/' -e \
       's/^\(USE=".*\)nvenc /\1/' -e \
       's/^\(USE=".*\) nvidia/\1/' /etc/portage/make.conf
   fi
@@ -126,7 +128,7 @@ profile_package_installation() {
 
   [[ "${GPU}" == 'nvidia' ]] && to_gentoo emerge media-libs/nvidia-vaapi-driver
 
-  local -r CPU_FLAGS="$(to_gentoo cpuid2cpuflags | sed 's/^CPU_FLAGS_X86: //')"
+  local -r CPU_FLAGS="$(to_gentoo cpuid2cpuflags | sed -e 's/^CPU_FLAGS_X86: //')"
 
   to_gentoo sed -i -e "s/^# \(CPU_FLAGS_X86=\)/\1\"${CPU_FLAGS}\"/" /etc/portage/make.conf
   to_gentoo emerge -uDN @world
@@ -136,7 +138,8 @@ profile_package_installation() {
 
 localization() {
   to_gentoo ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
-  to_gentoo sed -i -e 's/^#\(en_US.UTF-8 UTF-8\)/\1/' -e \
+  to_gentoo sed -i -e \
+    's/^#\(en_US.UTF-8 UTF-8\)/\1/' -e \
     's/^#\(ja_JP.UTF-8 UTF-8\)/\1/' /etc/locale.gen
   to_gentoo locale-gen
   to_gentoo eselect locale set 4
@@ -229,7 +232,8 @@ VDPAU_DRIVER='radeonsi'"
   # env
   echo "${ENVIRONMENT}" >> /mnt/gentoo/etc/environment
   # Time sync
-  to_gentoo sed -i -e 's/^#\(NTP=\)/\1ntp.nict.jp/' -e \
+  to_gentoo sed -i -e \
+    's/^#\(NTP=\)/\1ntp.nict.jp/' -e \
     's/^#\(FallbackNTP=\).*/\1ntp1.jst.mfeed.ad.jp ntp2.jst.mfeed.ad.jp ntp3.jst.mfeed.ad.jp/' /etc/systemd/timesyncd.conf
 
   to_gentoo emerge app-admin/sudo

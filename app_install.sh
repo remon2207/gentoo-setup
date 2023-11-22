@@ -53,9 +53,10 @@ fstab_configration() {
   local -r CACHE_FSTAB="$(
     cat << EOF
 # ramdisk
-tmpfs /tmp               tmpfs rw,nodev,nosuid,noatime,size=4G,mode=1777                   0 0
-tmpfs /var/tmp/portage   tmpfs rw,nodev,nosuid,noatime,size=8G                             0 0
-tmpfs ${USER}/.cache tmpfs rw,nodev,nosuid,noatime,size=8G,mode=0755,uid=1000,gid=1000 0 0
+tmpfs /tmp               tmpfs rw,async,nodev,nosuid,noatime,size=4G,mode=1777                                     0 0
+tmpfs /var/tmp/portage   tmpfs rw,async,nodev,nosuid,noatime,size=8G                                               0 0
+tmpfs ${HOME}/.cache tmpfs rw,async,nodev,nosuid,noatime,nomand,lazytime,size=8G,mode=0755,uid=1000,gid=1000   0 0
+tmpfs ${HOME}/tmp    tmpfs rw,async,nodev,nosuid,noatime,nomand,lazytime,size=256M,mode=0755,uid=1000,gid=1000 0 0
 EOF
   )"
 
