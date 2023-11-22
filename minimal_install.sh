@@ -147,7 +147,7 @@ mounting() {
   mount --make-slave /mnt/gentoo/run
 
   # shellcheck disable=SC1091
-  source /mnt/gentoo/etc/profile
+  . /mnt/gentoo/etc/profile
 }
 
 repository_update() {
@@ -182,7 +182,7 @@ localization() {
 
   chroot /mnt/gentoo env-update
   # shellcheck disable=SC1091
-  source /mnt/gentoo/etc/profile
+  . /mnt/gentoo/etc/profile
 }
 
 kernel_installation() {
