@@ -21,7 +21,7 @@ if [[ ${#} -eq 0 ]]; then
   exit 1
 fi
 
-BUILD_JOBS="$(($(nproc) + 1))"
+BUILD_JOBS="$(("$(nproc)" + 1))"
 readonly BUILD_JOBS
 
 SCRIPT_DIR="$(
