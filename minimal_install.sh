@@ -31,7 +31,7 @@ tarball_extract() {
   local -r STAGE_FILE="$(curl -fsSL "${TARBALL_DIR}" | grep 'tar.xz"' | awk -F '"' '{print $8}')"
 
   cd /mnt/gentoo
-  wget "${TARBALL_DIR}/${STAGE_FILE}"
+  curl -fsSOL "${TARBALL_DIR}/${STAGE_FILE}"
   tar xpvf "${STAGE_FILE}" --xattrs-include='*.*' --numeric-owner
 }
 
