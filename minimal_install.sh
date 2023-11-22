@@ -2,67 +2,14 @@
 
 set -eu
 
-usage() {
-  cat << EOF
-USAGE:
-  ${0} <OPTIONS>
-OPTIONS:
-  -d        Path of disk
-  -m        [intel, amd]
-  -g        [intel, amd]
-  -u        Password of user
-  -r        Password of root
-  -h        See Help
-EOF
-}
+unalias cp rm
 
-[[ ${#} -eq 0 ]] && usage && exit 1
-
+readonly DISK='/dev/sda'
 BUILD_JOBS="$(("$(nproc)" + 1))" && readonly BUILD_JOBS
 SCRIPT_DIR="$(cd "$(dirname "${0}")" && pwd)" && readonly SCRIPT_DIR
+CPU_INFO="$(grep 'model name' /proc/cpuinfo | awk -F '[ (]' 'NR==1 {print $2}')" && readonly CPU_INFO
 
-while getopts 'd:m:g:u:r:h' opt; do
-  case "${opt}" in
-  'd')
-    readonly DISK="${OPTARG}"
-    ;;
-  'm')
-    readonly MICROCODE="${OPTARG}"
-    ;;
-  'g')
-    readonly GPU="${OPTARG}"
-    ;;
-  'u')
-    readonly USER_PASSWORD="${OPTARG}"
-    ;;
-  'r')
-    readonly ROOT_PASSWORD="${OPTARG}"
-    ;;
-  'h')
-    usage && exit 0
-    ;;
-  *)
-    usage && exit 1
-    ;;
-  esac
-done
-
-check_variables() {
-  case "${MICROCODE}" in
-  'intel') ;;
-  'amd') ;;
-  *)
-    echo -e '\e[31mmicrocode typo\e[m' && exit 1
-    ;;
-  esac
-  case "${GPU}" in
-  'intel') ;;
-  'amd') ;;
-  *)
-    echo -e '\e[31mgpu typo\e[m' && exit 1
-    ;;
-  esac
-}
+to_gentoo() { chroot /mnt/gentoo "${@}"; }
 
 partitioning() {
   local -r EFI_PART_TYPE="$(sgdisk -L | grep 'ef00' | awk '{print $6,$7,$8}')"
@@ -89,39 +36,29 @@ tarball_extract() {
 }
 
 portage_configration() {
-  \cp -a "${SCRIPT_DIR}"/{make.conf,package.{use,license,accept_keywords}} /mnt/gentoo/etc/portage
+  cp -a "${SCRIPT_DIR}"/{make.conf,package.{use,license,accept_keywords}} /mnt/gentoo/etc/portage
 
   mkdir /mnt/gentoo/etc/portage/repos.conf
-  \cp /mnt/gentoo/usr/share/portage/config/repos.conf /mnt/gentoo/etc/portage/repos.conf/gentoo.conf
-  \cp -L /etc/resolv.conf /mnt/gentoo/etc
+  cp /mnt/gentoo/usr/share/portage/config/repos.conf /mnt/gentoo/etc/portage/repos.conf/gentoo.conf
+  cp -L /etc/resolv.conf /mnt/gentoo/etc
 
-  case "${MICROCODE}" in
-  'intel')
+  case "${CPU_INFO}" in
+  'Intel')
     echo 'sys-firmware/intel-microcode initramfs' > /mnt/gentoo/etc/portage/package.use/intel-microcode > /dev/null 2>&1
-    \rm -rf /mnt/gentoo/etc/portage/package.use/linux-firmware
+    rm -rf /mnt/gentoo/etc/portage/package.use/linux-firmware
     ;;
-  'amd')
+  'AMD')
     echo 'sys-kernel/linux-firmware initramfs' > /mnt/gentoo/etc/portage/package.use/linux-firmware > /dev/null 2>&1
-    \rm -rf /mnt/gentoo/etc/portage/package.use/intel-microcode
+    rm -rf /mnt/gentoo/etc/portage/package.use/intel-microcode
     ;;
   esac
 
-  chroot /mnt/gentoo sed -i -e "s/^\(MAKEOPTS=\"-j\).*/\1${BUILD_JOBS}\"/" -e \
+  to_gentoo sed -i -e "s/^\(MAKEOPTS=\"-j\).*/\1${BUILD_JOBS}\"/" -e \
     's/^\(CPU_FLAGS_X86=\).*/# \1/' -e \
-    's/^\(USE=".*\) pulseaudio/\1/' /etc/portage/make.conf
-
-  case "${GPU}" in
-  'intel')
-    chroot /mnt/gentoo sed -i -e 's/^\(VIDEO_CARDS=\).*/\1"intel"/' -e \
-      's/^\(USE=".*\)nvenc /\1/' -e \
-      's/^\(USE=".*\)nvidia /\1/' /etc/portage/make.conf
-    ;;
-  'amd')
-    chroot /mnt/gentoo sed -i -e 's/^\(VIDEO_CARDS=\).*/\1"amdgpu radeonsi virtualbox"/' -e \
-      's/^\(USE=".*\)nvenc /\1/' -e \
-      's/^\(USE=".*\)nvidia /\1/' /etc/portage/make.conf
-    ;;
-  esac
+    's/^\(VIDEO_CARDS=\).*/\1"virtualbox"/' -e \
+    's/^\(USE=".*\) pulseaudio/\1/' -e \
+    's/^\(USE=".*\)nvenc /\1/' -e \
+    's/^\(USE=".*\)nvidia /\1/' /etc/portage/make.conf
 }
 
 mounting() {
@@ -135,60 +72,56 @@ mounting() {
 }
 
 repository_update() {
-  chroot /mnt/gentoo emerge-webrsync
-  chroot /mnt/gentoo emaint sync -a
-  chroot /mnt/gentoo eselect news read
+  to_gentoo emerge-webrsync
+  to_gentoo emaint sync -a
+  to_gentoo eselect news read
 }
 
 profile_package_installation() {
-  FEATURES='-ccache' chroot /mnt/gentoo emerge dev-util/ccache
-  chroot /mnt/gentoo emerge app-portage/cpuid2cpuflags
+  FEATURES='-ccache' to_gentoo emerge dev-util/ccache
+  to_gentoo emerge app-portage/cpuid2cpuflags
 
-  if [[ "${GPU}" == 'intel' ]]; then
-    echo 'media-libs/libva-intel-media-driver no-source-code' > /mnt/gentoo/etc/portage/package.license/libva-intel-media-driver
-    chroot /mnt/gentoo emerge media-libs/libva-intel-media-driver
-  fi
+  local -r CPU_FLAGS="$(to_gentoo cpuid2cpuflags | sed 's/^CPU_FLAGS_X86: //')"
 
-  local -r CPU_FLAGS="$(chroot /mnt/gentoo cpuid2cpuflags | sed 's/^CPU_FLAGS_X86: //')"
-
-  chroot /mnt/gentoo sed -i -e "s/^# \(CPU_FLAGS_X86=\)/\1\"${CPU_FLAGS}\"/" /etc/portage/make.conf
-  chroot /mnt/gentoo emerge -uDN @world
-  chroot /mnt/gentoo emerge app-editors/neovim
-  chroot /mnt/gentoo emerge --depclean
+  to_gentoo sed -i -e "s/^# \(CPU_FLAGS_X86=\)/\1\"${CPU_FLAGS}\"/" /etc/portage/make.conf
+  to_gentoo emerge -uDN @world
+  to_gentoo emerge app-editors/neovim
+  to_gentoo emerge --depclean
 }
 
 localization() {
-  chroot /mnt/gentoo ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
-  chroot /mnt/gentoo sed -i -e 's/^#\(en_US.UTF-8 UTF-8\)/\1/' -e \
+  to_gentoo ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
+  to_gentoo sed -i -e 's/^#\(en_US.UTF-8 UTF-8\)/\1/' -e \
     's/^#\(ja_JP.UTF-8 UTF-8\)/\1/' /etc/locale.gen
-  chroot /mnt/gentoo locale-gen
-  chroot /mnt/gentoo eselect locale set 4
+  to_gentoo locale-gen
+  to_gentoo eselect locale set 4
 
-  chroot /mnt/gentoo env-update
+  to_gentoo env-update
   # shellcheck disable=SC1091
   . /mnt/gentoo/etc/profile
 }
 
 kernel_installation() {
-  chroot /mnt/gentoo emerge sys-kernel/{linux-firmware,gentoo-sources,dracut}
+  to_gentoo emerge sys-kernel/{linux-firmware,gentoo-sources,dracut}
 
-  [[ "${MICROCODE}" == 'intel' ]] && chroot /mnt/gentoo emerge sys-firmware/intel-microcode
+  [[ "${CPU_INFO}" == 'Intel' ]] && to_gentoo emerge sys-firmware/intel-microcode
 
-  chroot /mnt/gentoo eselect kernel set 1
+  to_gentoo eselect kernel set 1
 
-  \cp -a "${SCRIPT_DIR}/kernel_conf" /mnt/gentoo/usr/src/linux/.config
-  chroot /mnt/gentoo bash -c 'cd /usr/src/linux && make oldconfig && make menuconfig'
-  chroot /mnt/gentoo bash -c "cd /usr/src/linux && make -j${BUILD_JOBS} && make modules_install && make install"
-  chroot /mnt/gentoo dracut --kver "$(uname -r | awk -F '-' '{print $1}')-gentoo" --no-kernel
+  cp -a "${SCRIPT_DIR}/kernel_conf" /mnt/gentoo/usr/src/linux/.config
+  to_gentoo bash -c 'cd /usr/src/linux && make oldconfig && make menuconfig'
+  to_gentoo bash -c "cd /usr/src/linux && make -j${BUILD_JOBS} && make modules_install && make install"
+  to_gentoo dracut --kver "$(uname -r | awk -F '-' '{print $1}')-gentoo" --no-kernel
 
-  chroot /mnt/gentoo emerge -uDN @world
-  chroot /mnt/gentoo emerge --depclean
+  to_gentoo emerge -uDN @world
+  to_gentoo emerge --depclean
 }
 
 fstab_configration() {
-  local -r BOOT_PARTUUID="$(blkid -s PARTUUID -o value "${DISK}1")"
+  show_partuuid() { blkid -s PARTUUID -o value "${1}"; }
 
-  ROOT_PARTUUID="$(blkid -s PARTUUID -o value "${DISK}2")" && readonly ROOT_PARTUUID
+  local -r BOOT_PARTUUID="$(show_partuuid "${DISK}1")"
+  ROOT_PARTUUID="$(show_partuuid "${DISK}2")" && readonly ROOT_PARTUUID
 
   local -r FSTAB="$(
     cat << EOF
@@ -201,15 +134,17 @@ EOF
 }
 
 systemd_configration() {
-  chroot /mnt/gentoo systemd-machine-id-setup
-  chroot /mnt/gentoo systemd-firstboot --keymap us
-  chroot /mnt/gentoo systemctl preset-all
-  chroot /mnt/gentoo bootctl install
+  to_gentoo systemd-machine-id-setup
+  to_gentoo systemd-firstboot --keymap us
+  to_gentoo systemctl preset-all
+  to_gentoo bootctl install
+
+  find_boot() { find /mnt/gentoo/boot "${@}"; }
 
   local -r MACHINE_ID="$(cat /mnt/gentoo/etc/machine-id)"
-  local -r VMLINUZ="$(find /mnt/gentoo/boot -name '*vmlinuz*gentoo' -type f | awk -F '/' '{print $5}')"
-  local -r UCODE="$(find /mnt/gentoo/boot -name '*uc*' -type f | awk -F '/' '{print $5}')"
-  local -r INITRAMFS="$(find /mnt/gentoo/boot -name '*initramfs*gentoo*' -type f | awk -F '/' '{print $5}')"
+  local -r VMLINUZ="$(find_boot -name '*vmlinuz*gentoo' -type f | awk -F '/' '{print $5}')"
+  local -r UCODE="$(find_boot -name '*uc*' -type f | awk -F '/' '{print $5}')"
+  local -r INITRAMFS="$(find_boot -name '*initramfs*gentoo*' -type f | awk -F '/' '{print $5}')"
 
   local -r LOADER_CONF="$(
     cat << EOF
@@ -237,9 +172,9 @@ EOF
 user_setting() {
   local -r USER_NAME='virt'
 
-  chroot /mnt/gentoo useradd -m -G wheel -s /bin/bash "${USER_NAME}"
-  echo "${USER_NAME}:${USER_PASSWORD}" | chroot /mnt/gentoo chpasswd
-  echo "root:${ROOT_PASSWORD}" | chroot /mnt/gentoo chpasswd
+  to_gentoo useradd -m -G wheel -s /bin/bash "${USER_NAME}"
+  echo "${USER_NAME}:virt" | to_gentoo chpasswd
+  echo 'root:root' | to_gentoo chpasswd
 }
 
 others_configration() {
@@ -252,38 +187,17 @@ DHCP=yes
 DNS=8.8.8.8
 DNS=8.8.4.4"
 
-  case "${GPU}" in
-  'intel')
-    local -r ENVIRONMENT="GTK_IM_MODULE='fcitx5'
-QT_IM_MODULE='fcitx5'
-XMODIFIERS='@im=fcitx5'
-
-LIBVA_DRIVER_NAME='intel'
-VDPAU_DRIVER='intel'"
-    ;;
-  'amd')
-    local -r ENVIRONMENT="GTK_IM_MODULE='fcitx5'
-QT_IM_MODULE='fcitx5'
-XMODIFIERS='@im=fcitx5'
-
-LIBVA_DRIVER_NAME='radeonsi'
-VDPAU_DRIVER='radeonsi'"
-    ;;
-  esac
-
   # Network
   echo 'virtualbox' > /mnt/gentoo/etc/hostname
   echo "${WIRED_NETWORK}" >> /mnt/gentoo/etc/systemd/network/20-wired.network
-  # env
-  echo "${ENVIRONMENT}" >> /mnt/gentoo/etc/environment
   # Time sync
-  chroot /mnt/gentoo sed -i -e 's/^#\(NTP=\)/\1ntp.nict.jp/' -e \
+  to_gentoo sed -i -e 's/^#\(NTP=\)/\1ntp.nict.jp/' -e \
     's/^#\(FallbackNTP=\).*/\1ntp1.jst.mfeed.ad.jp ntp2.jst.mfeed.ad.jp ntp3.jst.mfeed.ad.jp/' /etc/systemd/timesyncd.conf
 
-  chroot /mnt/gentoo emerge app-admin/sudo
-  chroot /mnt/gentoo sed -e 's/^# \(%wheel ALL=(ALL:ALL) ALL\)/\1/' /etc/sudoers | EDITOR='tee' chroot /mnt/gentoo visudo &> /dev/null
+  to_gentoo emerge app-admin/sudo
+  to_gentoo sed -e 's/^# \(%wheel ALL=(ALL:ALL) ALL\)/\1/' /etc/sudoers | EDITOR='tee' to_gentoo visudo &> /dev/null
 
-  \rm -rf /mnt/gentoo/stage3-*.tar.xz
+  rm -rf /mnt/gentoo/stage3-*.tar.xz
 }
 
 main() {
