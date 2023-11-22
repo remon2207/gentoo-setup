@@ -201,7 +201,6 @@ DNS=8.8.4.4"
 }
 
 main() {
-  check_variables
   partitioning
   tarball_extract
   portage_configration
