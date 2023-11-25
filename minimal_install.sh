@@ -2,7 +2,8 @@
 
 set -eu
 
-unalias cp rm
+# unalias cp rm
+unalias cp
 
 readonly DISK='/dev/sda'
 BUILD_JOBS="$(("$(nproc)" + 1))" && readonly BUILD_JOBS
