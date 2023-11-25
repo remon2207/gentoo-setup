@@ -37,7 +37,7 @@ tarball_extract() {
 }
 
 portage_configration() {
-  cp -a "${SCRIPT_DIR}/"{make.conf,package.{use,license,accept_keywords}} /mnt/gentoo/etc/portage
+  cp -a "${SCRIPT_DIR}"/{make.conf,package.{use,license,accept_keywords}} /mnt/gentoo/etc/portage
 
   mkdir /mnt/gentoo/etc/portage/repos.conf
   cp /mnt/gentoo/usr/share/portage/config/repos.conf /mnt/gentoo/etc/portage/repos.conf/gentoo.conf
