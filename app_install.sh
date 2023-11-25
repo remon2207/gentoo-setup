@@ -60,7 +60,7 @@ tmpfs ${HOME}/tmp    tmpfs rw,async,nodev,nosuid,noatime,nomand,lazytime,size=25
 EOF
   )"
 
-  echo "${CACHE_FSTAB}" | sudo tee -a /etc/fstab
+  echo "${CACHE_FSTAB}" | sudo tee -a /etc/fstab &> /dev/null
 }
 
 other() {
