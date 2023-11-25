@@ -44,11 +44,11 @@ portage_configration() {
 
   case "${CPU_INFO}" in
   'Intel')
-    echo 'sys-firmware/intel-microcode initramfs' > /mnt/gentoo/etc/portage/package.use/intel-microcode > /dev/null 2>&1
+    echo 'sys-firmware/intel-microcode initramfs' > /mnt/gentoo/etc/portage/package.use/intel-microcode
     rm -rf /mnt/gentoo/etc/portage/package.use/linux-firmware
     ;;
   'AMD')
-    echo 'sys-kernel/linux-firmware initramfs' > /mnt/gentoo/etc/portage/package.use/linux-firmware > /dev/null 2>&1
+    echo 'sys-kernel/linux-firmware initramfs' > /mnt/gentoo/etc/portage/package.use/linux-firmware
     rm -rf /mnt/gentoo/etc/portage/package.use/intel-microcode
     ;;
   esac
