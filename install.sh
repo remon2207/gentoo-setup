@@ -23,7 +23,7 @@ to_gentoo() { chroot /mnt/gentoo "${@}"; }
 
 BUILD_JOBS="$(("$(nproc)" + 1))" && readonly BUILD_JOBS
 SCRIPT_DIR="$(cd "$(dirname "${0}")" && pwd)" && readonly SCRIPT_DIR
-CPU_INFO="$(grep 'model name' /proc/cpuinfo | awk -F '[ (]' 'NR==1 {print $2}')" && readonly CPU_INFO
+CPU_INFO="$(grep 'model name' /proc/cpuinfo | awk -F '[ (]' 'NR==1 {print $3}')" && readonly CPU_INFO
 
 while getopts 'd:g:u:r:h' opt; do
   case "${opt}" in
