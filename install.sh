@@ -17,7 +17,7 @@ EOF
 
 [[ ${#} -eq 0 ]] && usage && exit 1
 
-unalias cp rm
+unalias -a
 
 to_gentoo() { chroot /mnt/gentoo "${@}"; }
 
