@@ -156,8 +156,9 @@ kernel_installation() {
 
   to_gentoo eselect kernel set 1
 
-  cp -a "${SCRIPT_DIR}/kernel_conf" /mnt/gentoo/usr/src/linux/.config
-  to_gentoo bash -c 'cd /usr/src/linux && make oldconfig && make menuconfig'
+  # cp -a "${SCRIPT_DIR}/kernel_conf" /mnt/gentoo/usr/src/linux/.config
+  # to_gentoo bash -c 'cd /usr/src/linux && make oldconfig && make menuconfig'
+  to_gentoo bash -c 'cd /usr/src/linux && make menuconfig'
   to_gentoo bash -c "cd /usr/src/linux && make -j${BUILD_JOBS} && make modules_install; make install"
   to_gentoo dracut --kver "$(uname -r | awk -F '-' '{print $1}')-gentoo" --no-kernel
 
