@@ -17,8 +17,7 @@ vim /etc/portage/make.conf
 # VIDEO_CARDS="nvidia virtualbox"
 # VIDEO_CARDS="amdgpu radeonsi virtualbox"
 # INPUT_DEVICES="libinput"
-# USE="nvenc opengl policykit vdpau vulkan nvidia vaapi pulseaudio cjk systemd X gtk -upnp -upnp-av -semantic-desktop -rss -rdp -ppds -pcmcia -mms -hddtemp -handbook -gphoto2 -gimp -dedicated -clamav -coreaudio -apache2 -aqua -bash-completion -gdbm -qdbm -mssql -mysql -mysqli -oci8 -oci8-instant-client -oracle -postgres -cdb -dbi -dbm -firebird -freetds -odbc -sqlite -smartcard -scanner -joystick -maildir -mbox -milter -networkmanager -screencast -wifi -xscreensaver -alsa -elogind -syslog -qt5 -qt6 -gnome -kde -plasma -wayland"
-# USE="opengl policykit vdpau vaapi vulkan cjk systemd X gtk -upnp -upnp-av -semantic-desktop -rss -rdp -ppds -pcmcia -mms -hddtemp -handbook -gphoto2 -gimp -dedicated -clamav -coreaudio -apache2 -aqua -bash-completion -gdbm -qdbm -mssql -mysql -mysqli -oci8 -oci8-instant-client -oracle -postgres -cdb -dbi -dbm -firebird -freetds -odbc -sqlite -smartcard -scanner -joystick -maildir -mbox -milter -networkmanager -screencast -wifi -xscreensaver -alsa -elogind -syslog -qt5 -qt6 -gnome -kde -plasma -wayland"
+# USE="opengl policykit vdpau vaapi vulkan pulseaudio cjk systemd X gtk -qt5 -qt6 -gnome -kde -plasma -wayland"
 
 mirrorselect -i -o >> /mnt/gentoo/etc/portage/make.conf
 
