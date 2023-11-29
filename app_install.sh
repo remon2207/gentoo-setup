@@ -7,7 +7,7 @@ pkgs_installation() {
   sudo eselect repository enable guru gentoo-zh
   sudo eselect repository add remon-overlay git https://github.com/remon2207/remon-overlay.git
 
-  for repos in guru gentoo-zh remon-overlay; do sudo emaint sync -r "${repos}"; done
+  for repos in guru gentoo-zh remon-overlay; do sudo emaint sync --repo "${repos}"; done
 
   sudo emerge media-video/{wireplumber,pipewire} \
     media-sound/{pulseaudio,pavucontrol} \
@@ -36,13 +36,13 @@ pkgs_installation() {
     x11-themes/{arc-theme,breezex-xcursors,kvantum,papirus-icon-theme} \
     x11-wm/i3
 
-  sudo sed -i -e 's/^USE="/&pulseaudio /' /etc/portage/make.conf
-  sudo emerge -uDN @world
+  sudo sed --in-place --expression='s/^USE="/&pulseaudio /' /etc/portage/make.conf
+  sudo emerge --update --deep --newuse @world
   sudo emerge --depclean
 }
 
 group_configration() {
-  for groups in video pipewire vboxguest vboxusers; do sudo gpasswd -a "${USER}" "${groups}"; done
+  for groups in video pipewire vboxguest vboxusers; do sudo gpasswd --add "${USER}" "${groups}"; done
 
   sudo systemctl enable {virtualbox-guest-additions,docker}.service
   systemctl --user disable pulseaudio.{socket,service}
@@ -60,13 +60,13 @@ tmpfs ${HOME}/tmp    tmpfs rw,async,nodev,nosuid,noatime,nomand,lazytime,size=1G
 EOF
   )"
 
-  echo "${CACHE_FSTAB}" | sudo tee -a /etc/fstab &> /dev/null
+  echo "${CACHE_FSTAB}" | sudo tee --append /etc/fstab &> /dev/null
 }
 
 other() {
-  ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
-  cp -a /etc/X11/xinit/xinitrc "${HOME}/.xinitrc"
-  rm -rf /tmp /var/tmp/portage "${HOME}/.cache"
+  ln --symbolic --force /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
+  cp --archive /etc/X11/xinit/xinitrc "${HOME}/.xinitrc"
+  rm ----recursive --force /tmp /var/tmp/portage "${HOME}/.cache"
 }
 
 main() {

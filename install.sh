@@ -23,7 +23,7 @@ to_gentoo() { chroot /mnt/gentoo "${@}"; }
 
 BUILD_JOBS="$(("$(nproc)" + 1))" && readonly BUILD_JOBS
 SCRIPT_DIR="$(cd "$(dirname "${0}")" && pwd)" && readonly SCRIPT_DIR
-CPU_INFO="$(grep 'model name' /proc/cpuinfo | awk -F '[ (]' 'NR==1 {print $3}')" && readonly CPU_INFO
+CPU_INFO="$(grep 'model name' /proc/cpuinfo | awk --field-separator='[ (]' 'NR==1 {print $3}')" && readonly CPU_INFO
 
 while getopts 'd:g:u:r:h' opt; do
   case "${opt}" in
@@ -62,47 +62,47 @@ partitioning() {
   mkfs.ext4 "${DISK}1"
 
   mount "${DISK}1" /mnt/gentoo
-  mount -m -o fmask=0077,dmask=0077 /dev/sdd1 /mnt/gentoo/boot
-  mount -m "${DISK}2" /mnt/gentoo/home
+  mount --mkdir --options fmask=0077,dmask=0077 /dev/sdd1 /mnt/gentoo/boot
+  mount --mkdir "${DISK}2" /mnt/gentoo/home
 }
 
 tarball_extract() {
   local -r TARBALL_DIR='https://distfiles.gentoo.org/releases/amd64/autobuilds/current-stage3-amd64-systemd'
-  local -r STAGE_FILE="$(curl -fsSL "${TARBALL_DIR}" | grep 'tar.xz"' | awk -F '"' '{print $8}')"
+  local -r STAGE_FILE="$(curl --fail --silent --show-error --location "${TARBALL_DIR}" | grep 'tar.xz"' | awk --field-separator='"' '{print $8}')"
 
   cd /mnt/gentoo
-  curl -fsSOL "${TARBALL_DIR}/${STAGE_FILE}"
+  curl --fail --silent --show-error --remote-name --location "${TARBALL_DIR}/${STAGE_FILE}"
   tar xpvf "${STAGE_FILE}" --xattrs-include='*.*' --numeric-owner
 }
 
 portage_configration() {
-  cp -a "${SCRIPT_DIR}/"{make.conf,package.{use,license,accept_keywords}} /mnt/gentoo/etc/portage
+  cp --archive "${SCRIPT_DIR}/"{make.conf,package.{use,license,accept_keywords}} /mnt/gentoo/etc/portage
 
   mkdir /mnt/gentoo/etc/portage/repos.conf
   cp /mnt/gentoo/usr/share/portage/config/repos.conf /mnt/gentoo/etc/portage/repos.conf/gentoo.conf
-  cp -L /etc/resolv.conf /mnt/gentoo/etc
+  cp --dereference /etc/resolv.conf /mnt/gentoo/etc
 
   case "${CPU_INFO}" in
   'Intel')
     echo 'sys-firmware/intel-microcode initramfs' > /mnt/gentoo/etc/portage/package.use/intel-microcode
-    rm -rf /mnt/gentoo/etc/portage/package.use/linux-firmware
+    rm --recursive --force /mnt/gentoo/etc/portage/package.use/linux-firmware
     ;;
   'AMD')
     echo 'sys-kernel/linux-firmware initramfs' > /mnt/gentoo/etc/portage/package.use/linux-firmware
-    rm -rf /mnt/gentoo/etc/portage/package.use/intel-microcode
+    rm --recursive --force /mnt/gentoo/etc/portage/package.use/intel-microcode
     ;;
   esac
 
-  to_gentoo sed -i -e \
-    "s/^\(MAKEOPTS=\"-j\).*/\1${BUILD_JOBS}\"/" -e \
-    's/^\(CPU_FLAGS_X86=\).*/# \1/' -e \
-    's/^\(USE=".*\) pulseaudio/\1/' /etc/portage/make.conf
+  to_gentoo sed --in-place \
+    --expression="s/^\(MAKEOPTS=\"-j\).*/\1${BUILD_JOBS}\"/" \
+    --expression='s/^\(CPU_FLAGS_X86=\).*/# \1/' \
+    --expression='s/^\(USE=".*\) pulseaudio/\1/' /etc/portage/make.conf
 
   if [[ "${GPU}" == 'amd' ]]; then
-    to_gentoo sed -i -e \
-      's/^\(VIDEO_CARDS=\).*/\1"amdgpu radeonsi virtualbox"/' -e \
-      's/^\(USE=".*\)nvenc /\1/' -e \
-      's/^\(USE=".*\) nvidia/\1/' /etc/portage/make.conf
+    to_gentoo sed --in-place \
+      --expression='s/^\(VIDEO_CARDS=\).*/\1"amdgpu radeonsi virtualbox"/' \
+      --expression='s/^\(USE=".*\)nvenc /\1/' \
+      --expression='s/^\(USE=".*\) nvidia/\1/' /etc/portage/make.conf
   fi
 }
 
@@ -118,7 +118,7 @@ mounting() {
 
 repository_update() {
   to_gentoo emerge-webrsync
-  to_gentoo emaint sync -a
+  to_gentoo emaint sync --auto
   to_gentoo eselect news read
 }
 
@@ -128,19 +128,19 @@ profile_package_installation() {
 
   [[ "${GPU}" == 'nvidia' ]] && to_gentoo emerge media-libs/nvidia-vaapi-driver
 
-  local -r CPU_FLAGS="$(to_gentoo cpuid2cpuflags | sed -e 's/^CPU_FLAGS_X86: //')"
+  local -r CPU_FLAGS="$(to_gentoo cpuid2cpuflags | sed --expression='s/^CPU_FLAGS_X86: //')"
 
-  to_gentoo sed -i -e "s/^# \(CPU_FLAGS_X86=\)/\1\"${CPU_FLAGS}\"/" /etc/portage/make.conf
-  to_gentoo emerge -uDN @world
+  to_gentoo sed --in-place --expression="s/^# \(CPU_FLAGS_X86=\)/\1\"${CPU_FLAGS}\"/" /etc/portage/make.conf
+  to_gentoo emerge --update --deep --newuse @world
   to_gentoo emerge app-editors/neovim
   to_gentoo emerge --depclean
 }
 
 localization() {
-  to_gentoo ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
-  to_gentoo sed -i -e \
-    's/^#\(en_US.UTF-8 UTF-8\)/\1/' -e \
-    's/^#\(ja_JP.UTF-8 UTF-8\)/\1/' /etc/locale.gen
+  to_gentoo ln --symbolic --force /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
+  to_gentoo sed --in-place \
+    --expression='s/^#\(en_US.UTF-8 UTF-8\)/\1/' \
+    --expression='s/^#\(ja_JP.UTF-8 UTF-8\)/\1/' /etc/locale.gen
   to_gentoo locale-gen
   to_gentoo eselect locale set 4
 
@@ -160,14 +160,14 @@ kernel_installation() {
   # to_gentoo bash -c 'cd /usr/src/linux && make oldconfig && make menuconfig'
   to_gentoo bash -c 'cd /usr/src/linux && make menuconfig'
   to_gentoo bash -c "cd /usr/src/linux && make -j${BUILD_JOBS} && make modules_install; make install"
-  to_gentoo dracut --kver "$(uname -r | awk -F '-' '{print $1}')-gentoo" --no-kernel
+  to_gentoo dracut --kver "$(uname --kernel-release | awk --field-separator='-' '{print $1}')-gentoo" --no-kernel
 
-  to_gentoo emerge -uDN @world
+  to_gentoo emerge --update --deep --newuse @world
   to_gentoo emerge --depclean
 }
 
 fstab_configration() {
-  show_partuuid() { blkid -s PARTUUID -o value "${1}"; }
+  show_partuuid() { blkid --match-tag PARTUUID --output value "${1}"; }
 
   local -r BOOT_PARTUUID="$(show_partuuid /dev/sdd1)"
   local -r ROOT_PARTUUID="$(show_partuuid "${DISK}1")"
@@ -194,7 +194,7 @@ systemd_configration() {
 user_setting() {
   local -r USER_NAME='remon'
 
-  to_gentoo useradd -m -G wheel -s /bin/bash "${USER_NAME}"
+  to_gentoo useradd --create-home --groups wheel --shell /bin/bash "${USER_NAME}"
   echo "${USER_NAME}:${USER_PASSWORD}" | to_gentoo chpasswd
   echo "root:${ROOT_PASSWORD}" | to_gentoo chpasswd
 }
@@ -233,14 +233,14 @@ VDPAU_DRIVER='radeonsi'"
   # env
   echo "${ENVIRONMENT}" >> /mnt/gentoo/etc/environment
   # Time sync
-  to_gentoo sed -i -e \
-    's/^#\(NTP=\)/\1ntp.nict.jp/' -e \
-    's/^#\(FallbackNTP=\).*/\1ntp1.jst.mfeed.ad.jp ntp2.jst.mfeed.ad.jp ntp3.jst.mfeed.ad.jp/' /etc/systemd/timesyncd.conf
+  to_gentoo sed --in-place \
+    --expression='s/^#\(NTP=\)/\1ntp.nict.jp/' \
+    --expression='s/^#\(FallbackNTP=\).*/\1ntp1.jst.mfeed.ad.jp ntp2.jst.mfeed.ad.jp ntp3.jst.mfeed.ad.jp/' /etc/systemd/timesyncd.conf
 
   to_gentoo emerge app-admin/sudo
-  to_gentoo sed -e 's/^# \(%wheel ALL=(ALL:ALL) ALL\)/\1/' /etc/sudoers | EDITOR='tee' to_gentoo visudo &> /dev/null
+  to_gentoo sed --expression='s/^# \(%wheel ALL=(ALL:ALL) ALL\)/\1/' /etc/sudoers | EDITOR='tee' to_gentoo visudo &> /dev/null
 
-  rm -rf /mnt/gentoo/stage3-*.tar.xz
+  rm --recursive --force /mnt/gentoo/stage3-*.tar.xz
 }
 
 main() {
