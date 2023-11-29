@@ -12,7 +12,7 @@ pkgs_installation() {
   sudo emerge media-video/{wireplumber,pipewire} \
     media-sound/{pulseaudio,pavucontrol} \
     media-libs/libpulse \
-    app-containers/docker{,-cli} \
+    app-containers/docker{,-cli,-compose} \
     app-emulation/virtualbox{,-additions,-guest-additions,-extpack-oracle} \
     app-i18n/{fcitx{,-configtool,-gtk,-qt}:5,mozc} \
     app-misc/{ghq,jq,neofetch,ranger,tmux} \
