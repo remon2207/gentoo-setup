@@ -22,6 +22,7 @@ unalias -a
 to_gentoo() { chroot /mnt/gentoo "${@}"; }
 
 BUILD_JOBS="$(("$(nproc)" + 1))" && readonly BUILD_JOBS
+LOAD_AVG="$(("${BUILD_JOBS}" * 2))" && readonly LOAD_AVG
 SCRIPT_DIR="$(cd "$(dirname "${0}")" && pwd)" && readonly SCRIPT_DIR
 CPU_INFO="$(grep 'model name' /proc/cpuinfo | awk --field-separator='[ (]' 'NR==1 {print $3}')" && readonly CPU_INFO
 
@@ -72,7 +73,7 @@ tarball_extract() {
 
   cd /mnt/gentoo
   curl --fail --silent --show-error --remote-name --location "${TARBALL_DIR}/${STAGE_FILE}"
-  tar xpvf "${STAGE_FILE}" --xattrs-include='*.*' --numeric-owner
+  tar --extract --same-permissions --verbose --file "${STAGE_FILE}" --xattrs-include='*.*' --numeric-owner
 }
 
 portage_configration() {
@@ -94,7 +95,8 @@ portage_configration() {
   esac
 
   to_gentoo sed --in-place \
-    --expression="s/^\(MAKEOPTS=\"-j\).*/\1${BUILD_JOBS}\"/" \
+    --expression="s/^\(MAKEOPTS=\"\).*/\1--jobs=${BUILD_JOBS} --load-average=${LOAD_AVG}\"/" \
+    --expression="s/^\(EMERGE_DEFAULT_OPTS=\"\).*/\1--jobs=${BUILD_JOBS} --load-average=${LOAD_AVG}\"/" \
     --expression='s/^\(CPU_FLAGS_X86=\).*/# \1/' \
     --expression='s/^\(USE=".*\) pulseaudio/\1/' /etc/portage/make.conf
 
@@ -159,7 +161,7 @@ kernel_installation() {
   # cp -a "${SCRIPT_DIR}/kernel_conf" /mnt/gentoo/usr/src/linux/.config
   # to_gentoo bash -c 'cd /usr/src/linux && make oldconfig && make menuconfig'
   to_gentoo bash -c 'cd /usr/src/linux && make menuconfig'
-  to_gentoo bash -c "cd /usr/src/linux && make -j${BUILD_JOBS} && make modules_install; make install"
+  to_gentoo bash -c "cd /usr/src/linux && make --jobs=${BUILD_JOBS} && make modules_install; make install"
   to_gentoo dracut --kver "$(uname --kernel-release | awk --field-separator='-' '{print $1}')-gentoo" --no-kernel
 
   to_gentoo emerge --update --deep --newuse @world
@@ -238,7 +240,7 @@ VDPAU_DRIVER='radeonsi'"
     --expression='s/^#\(FallbackNTP=\).*/\1ntp1.jst.mfeed.ad.jp ntp2.jst.mfeed.ad.jp ntp3.jst.mfeed.ad.jp/' /etc/systemd/timesyncd.conf
 
   to_gentoo emerge app-admin/sudo
-  to_gentoo sed --expression='s/^# \(%wheel ALL=(ALL:ALL) ALL\)/\1/' /etc/sudoers | EDITOR='tee' to_gentoo visudo &> /dev/null
+  to_gentoo sed --expression='s/^# \(%wheel ALL=(ALL:ALL) ALL\)/\1/' /etc/sudoers | EDITOR='/usr/bin/tee' to_gentoo visudo &> /dev/null
 
   rm --recursive --force /mnt/gentoo/stage3-*.tar.xz
 }
