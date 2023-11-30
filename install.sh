@@ -63,7 +63,7 @@ partitioning() {
   mkfs.ext4 "${DISK}1"
 
   mount "${DISK}1" /mnt/gentoo
-  mount --mkdir --options fmask=0077,dmask=0077 /dev/sdd1 /mnt/gentoo/boot
+  mount --mkdir --options 'fmask=0077,dmask=0077' /dev/sdd1 /mnt/gentoo/boot
   mount --mkdir "${DISK}2" /mnt/gentoo/home
 }
 
@@ -169,7 +169,7 @@ kernel_installation() {
 }
 
 fstab_configration() {
-  show_partuuid() { blkid --match-tag PARTUUID --output value "${1}"; }
+  show_partuuid() { blkid --match-tag 'PARTUUID' --output 'value' "${1}"; }
 
   local -r BOOT_PARTUUID="$(show_partuuid /dev/sdd1)"
   local -r ROOT_PARTUUID="$(show_partuuid "${DISK}1")"
@@ -188,7 +188,7 @@ EOF
 
 systemd_configration() {
   to_gentoo systemd-machine-id-setup
-  to_gentoo systemd-firstboot --keymap us
+  to_gentoo systemd-firstboot --keymap 'us'
   to_gentoo systemctl preset-all
   to_gentoo bootctl install
 }
@@ -196,7 +196,7 @@ systemd_configration() {
 user_setting() {
   local -r USER_NAME='remon'
 
-  to_gentoo useradd --create-home --groups wheel --shell /bin/bash "${USER_NAME}"
+  to_gentoo useradd --create-home --groups 'wheel' --shell '/bin/bash' "${USER_NAME}"
   echo "${USER_NAME}:${USER_PASSWORD}" | to_gentoo chpasswd
   echo "root:${ROOT_PASSWORD}" | to_gentoo chpasswd
 }

@@ -24,7 +24,7 @@ partitioning() {
   mkfs.ext4 "${DISK}2"
 
   mount "${DISK}2" /mnt/gentoo
-  mount --mkdir --options fmask=0077,dmask=0077 "${DISK}1" /mnt/gentoo/boot
+  mount --mkdir --options 'fmask=0077,dmask=0077' "${DISK}1" /mnt/gentoo/boot
 }
 
 tarball_extract() {
@@ -122,7 +122,7 @@ kernel_installation() {
 }
 
 fstab_configration() {
-  show_partuuid() { blkid --match-tag PARTUUID --output value "${1}"; }
+  show_partuuid() { blkid --match-tag 'PARTUUID' --output 'value' "${1}"; }
 
   local -r BOOT_PARTUUID="$(show_partuuid "${DISK}1")"
   ROOT_PARTUUID="$(show_partuuid "${DISK}2")" && readonly ROOT_PARTUUID
@@ -139,11 +139,11 @@ EOF
 
 systemd_configration() {
   to_gentoo systemd-machine-id-setup
-  to_gentoo systemd-firstboot --keymap us
+  to_gentoo systemd-firstboot --keymap 'us'
   to_gentoo systemctl preset-all
   to_gentoo bootctl install
 
-  find_boot() { find /mnt/gentoo/boot -type f -name "${1}"; }
+  find_boot() { find /mnt/gentoo/boot -type 'f' -name "${1}"; }
 
   local -r MACHINE_ID="$(cat /mnt/gentoo/etc/machine-id)"
   local -r VMLINUZ="$(find_boot '*vmlinuz*gentoo' | awk --field-separator='/' '{print $5}')"
@@ -176,7 +176,7 @@ EOF
 user_setting() {
   local -r USER_NAME='virt'
 
-  to_gentoo useradd --create-home --groups wheel --shell /bin/bash "${USER_NAME}"
+  to_gentoo useradd --create-home --groups 'wheel' --shell '/bin/bash' "${USER_NAME}"
   echo "${USER_NAME}:virt" | to_gentoo chpasswd
   echo 'root:root' | to_gentoo chpasswd
 }
