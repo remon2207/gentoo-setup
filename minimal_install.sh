@@ -114,7 +114,7 @@ kernel_installation() {
 
   cp --archive "${SCRIPT_DIR}/kernel_conf" /mnt/gentoo/usr/src/linux/.config
   to_gentoo bash -c 'cd /usr/src/linux && make oldconfig && make menuconfig'
-  to_gentoo bash -c "cd /usr/src/linux && make --jobs=${BUILD_JOBS} && make modules_install; make install"
+  to_gentoo bash -c "cd /usr/src/linux && make --jobs=${BUILD_JOBS} --load-average=${LOAD_AVG} && make modules_install; make install"
   to_gentoo dracut --kver "$(uname --kernel-release | awk --field-separator='-' '{print $1}')-gentoo" --no-kernel
 
   to_gentoo emerge --update --deep --newuse @world
