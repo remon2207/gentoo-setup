@@ -96,7 +96,7 @@ portage_configration() {
 
   to_gentoo sed --in-place \
     --expression="s/^\(MAKEOPTS=\"\).*/\1--jobs=${BUILD_JOBS} --load-average=${LOAD_AVG}\"/" \
-    --expression="s/^\(EMERGE_DEFAULT_OPTS=\"\).*/\1--jobs=${BUILD_JOBS} --load-average=${LOAD_AVG}\"/" \
+    --expression="s/^\(EMERGE_DEFAULT_OPTS=\"\).*/\1--jobs=${BUILD_JOBS} --load-average=${LOAD_AVG} --ask --tree --verbose\"/" \
     --expression='s/^\(CPU_FLAGS_X86=\).*/# \1/' \
     --expression='s/^\(USE=".*\) pulseaudio/\1/' /etc/portage/make.conf
 
