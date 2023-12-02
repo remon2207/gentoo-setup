@@ -24,7 +24,7 @@ partitioning() {
   mkfs.ext4 "${DISK}2"
 
   mount "${DISK}2" /mnt/gentoo
-  mount --mkdir --options 'fmask=0077,dmask=0077' "${DISK}1" /mnt/gentoo/boot
+  mount --mkdir --options='fmask=0077,dmask=0077' "${DISK}1" /mnt/gentoo/boot
 }
 
 tarball_extract() {
@@ -33,7 +33,7 @@ tarball_extract() {
 
   cd /mnt/gentoo
   curl --fail --silent --show-error --remote-name --location "${TARBALL_DIR}/${STAGE_FILE}"
-  tar --extract --same-permissions --verbose --file "${STAGE_FILE}" --xattrs-include='*.*' --numeric-owner
+  tar --extract --same-permissions --verbose --file="${STAGE_FILE}" --xattrs-include='*.*' --numeric-owner
 }
 
 portage_configration() {
@@ -115,14 +115,14 @@ kernel_installation() {
   cp --archive "${SCRIPT_DIR}/kernel_conf" /mnt/gentoo/usr/src/linux/.config
   to_gentoo bash -c 'cd /usr/src/linux && make oldconfig && make menuconfig'
   to_gentoo bash -c "cd /usr/src/linux && make --jobs=${BUILD_JOBS} --load-average=${LOAD_AVG} && make modules_install; make install"
-  to_gentoo dracut --kver "$(uname --kernel-release | awk --field-separator='-' '{print $1}')-gentoo" --no-kernel
+  to_gentoo dracut --kver="$(uname --kernel-release | awk --field-separator='-' '{print $1}')-gentoo" --no-kernel
 
   to_gentoo emerge --update --deep --newuse @world
   to_gentoo emerge --depclean
 }
 
 fstab_configration() {
-  show_partuuid() { blkid --match-tag 'PARTUUID' --output 'value' "${1}"; }
+  show_partuuid() { blkid --match-tag='PARTUUID' --output='value' "${1}"; }
 
   local -r BOOT_PARTUUID="$(show_partuuid "${DISK}1")"
   ROOT_PARTUUID="$(show_partuuid "${DISK}2")" && readonly ROOT_PARTUUID
@@ -139,7 +139,7 @@ EOF
 
 systemd_configration() {
   to_gentoo systemd-machine-id-setup
-  to_gentoo systemd-firstboot --keymap 'us'
+  to_gentoo systemd-firstboot --keymap='us'
   to_gentoo systemctl preset-all
   to_gentoo bootctl install
 
@@ -176,7 +176,7 @@ EOF
 user_setting() {
   local -r USER_NAME='virt'
 
-  to_gentoo useradd --create-home --groups 'wheel' --shell '/bin/bash' "${USER_NAME}"
+  to_gentoo useradd --create-home --groups='wheel' --shell='/bin/bash' "${USER_NAME}"
   echo "${USER_NAME}:virt" | to_gentoo chpasswd
   echo 'root:root' | to_gentoo chpasswd
 }
