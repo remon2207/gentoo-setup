@@ -30,6 +30,7 @@ pkgs_installation() {
     sys-process/htop \
     www-client/{vivaldi,w3m} \
     www-misc/profile-sync-daemon \
+    x11-apps/xrandr \
     x11-base/xorg-server \
     x11-misc/{dunst,i3lock,picom,polybar,qt5ct,rofi,xautolock,xdg-user-dirs} \
     x11-terms/{alacritty,kitty,wezterm} \
