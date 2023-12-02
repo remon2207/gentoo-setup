@@ -37,7 +37,7 @@ tarball_extract() {
 }
 
 portage_configration() {
-  cp --archive "${SCRIPT_DIR}/"{make.conf,package.{use,license,accept_keywords}} /mnt/gentoo/etc/portage
+  cp --archive "${SCRIPT_DIR}/"{make.conf,package.{mask,use,license,accept_keywords}} /mnt/gentoo/etc/portage
 
   mkdir /mnt/gentoo/etc/portage/repos.conf
   cp /mnt/gentoo/usr/share/portage/config/repos.conf /mnt/gentoo/etc/portage/repos.conf/gentoo.conf
@@ -56,7 +56,7 @@ portage_configration() {
 
   to_gentoo sed --in-place \
     --expression="s/^\(MAKEOPTS=\"\).*/\1--jobs=${BUILD_JOBS} --load-average=${LOAD_AVG}\"/" \
-    --expression="s/^\(EMERGE_DEFAULT_OPTS=\"\).*/\1--jobs=${BUILD_JOBS} --load-average=${LOAD_AVG} --ask --tree --verbose\"/" \
+    --expression="s/^\(EMERGE_DEFAULT_OPTS=\"\).*/\1--jobs=${BUILD_JOBS} --load-average=${LOAD_AVG} --tree --verbose\"/" \
     --expression='s/^\(CPU_FLAGS_X86=\).*/# \1/' \
     --expression='s/^\(VIDEO_CARDS=\).*/\1"virtualbox"/' \
     --expression='s/^\(USE=".*\) pulseaudio/\1/' \
