@@ -19,7 +19,7 @@ pkgs_installation() {
     app-shells/{fzf,gentoo-zsh-completions,starship,zsh} \
     app-text/tldr \
     dev-lang/go \
-    dev-util/{git-delta,github-cli,shellcheck} \
+    dev-util/{git-delta,github-cli,shellcheck,stylua} \
     dev-vcs/lazygit \
     media-fonts/{fontawesome,hack,nerd-fonts,noto{,-cjk,-emoji}} \
     media-gfx/{feh,scrot,silicon} \
@@ -40,6 +40,9 @@ pkgs_installation() {
   sudo sed --in-place --expression='s/^USE="/&pulseaudio /' /etc/portage/make.conf
   sudo emerge --update --deep --newuse @world
   sudo emerge --depclean
+
+  go install github.com/google/yamlfmt/cmd/yamlfmt@latest
+  go install mvdan.cc/sh/v3/cmd/shfmt@latest
 }
 
 group_configration() {
