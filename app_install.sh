@@ -19,7 +19,7 @@ pkgs_installation() {
     app-shells/{fzf,gentoo-zsh-completions,starship,zsh} \
     app-text/tldr \
     dev-lang/go \
-    dev-util/{git-delta,github-cli,shellcheck,stylua} \
+    dev-util/{git-delta,github-cli,shellcheck,stylua,yamlfmt,shfmt} \
     dev-vcs/lazygit \
     media-fonts/{fontawesome,hack,nerd-fonts,noto{,-cjk,-emoji}} \
     media-gfx/{feh,scrot,silicon} \
