@@ -1,1 +1,1 @@
-net-misc/curl -ftp -imap -pop3 -smtp -tftp
+net-misc/curl -ftp -imap -pop3 -smtp -tftp -hsts

@@ -23,11 +23,13 @@ pkgs_installation() {
     dev-vcs/lazygit \
     media-fonts/{fontawesome,hack,nerd-fonts,noto{,-cjk,-emoji}} \
     media-gfx/{feh,scrot,silicon} \
-    net-im/{discord,slack} \
     net-fs/nfs-utils \
+    net-im/{discord,slack} \
+    net-misc/httpie \
     sys-apps/{bat,fd,lsd,pciutils,ripgrep,sd} \
     sys-auth/authy \
-    sys-process/htop \
+    sys-fs/duf \
+    sys-process/{htop,procs} \
     www-client/{vivaldi,w3m} \
     www-misc/profile-sync-daemon \
     x11-apps/xrandr \
