@@ -70,7 +70,6 @@ EOF
 }
 
 other() {
-  sudo systemctl set-ntp true
   ln --symbolic --force /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
   cp --archive /etc/X11/xinit/xinitrc "${HOME}/.xinitrc"
   rm ----recursive --force /tmp /var/tmp/portage "${HOME}/.cache"
@@ -83,4 +82,5 @@ main() {
   other
 }
 
+sudo systemctl set-ntp true
 main "${@}"
