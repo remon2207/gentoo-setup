@@ -18,7 +18,6 @@ pkgs_installation() {
     app-misc/{ghq,jq,neofetch,ranger,tmux} \
     app-shells/{fzf,gentoo-zsh-completions,starship,zsh} \
     app-text/tldr \
-    dev-lang/go \
     dev-util/{git-delta,github-cli,shellcheck,stylua,yamlfmt,shfmt} \
     dev-vcs/lazygit \
     media-fonts/{fontawesome,hack,nerd-fonts,noto{,-cjk,-emoji}} \
