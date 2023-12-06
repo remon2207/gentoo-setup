@@ -1,1 +1,0 @@
-dev-python/pluggy PYTHON_TARGETS: -* python3_10 python3_11 PYTHON_SINGLE_TARGET: -* python3_10 python3_11
