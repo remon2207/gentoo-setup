@@ -11,7 +11,6 @@ pkgs_installation() {
 
   sudo emerge media-video/{wireplumber,pipewire} \
     media-sound/{pulseaudio,pavucontrol} \
-    media-libs/libpulse \
     app-containers/docker{,-cli,-compose} \
     app-emulation/virtualbox{,-additions,-guest-additions,-extpack-oracle} \
     app-i18n/{fcitx{,-configtool,-gtk,-qt}:5,mozc} \
@@ -33,7 +32,7 @@ pkgs_installation() {
     www-misc/profile-sync-daemon \
     x11-apps/xrandr \
     x11-base/xorg-server \
-    x11-misc/{dunst,i3lock,picom,polybar,qt5ct,rofi,xautolock,xdg-user-dirs} \
+    x11-misc/{dunst,picom,polybar,qt5ct,rofi,xautolock,xdg-user-dirs} \
     x11-terms/{alacritty,kitty,wezterm} \
     x11-themes/{arc-theme,breezex-xcursors,kvantum,papirus-icon-theme} \
     x11-wm/i3
