@@ -42,9 +42,6 @@ pkgs_installation() {
   sudo sed --in-place --expression='s/^USE="/&pulseaudio /' /etc/portage/make.conf
   sudo emerge --update --deep --newuse @world
   sudo emerge --depclean
-
-  go install github.com/google/yamlfmt/cmd/yamlfmt@latest
-  go install mvdan.cc/sh/v3/cmd/shfmt@latest
 }
 
 group_configration() {
