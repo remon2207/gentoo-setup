@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -eu
+set -u
 
 pkgs_installation() {
   sudo emerge app-eselect/eselect-repository dev-vcs/git
