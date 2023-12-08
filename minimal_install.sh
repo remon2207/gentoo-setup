@@ -83,7 +83,7 @@ profile_package_installation() {
   FEATURES='-ccache' to-gentoo emerge dev-util/ccache
   to-gentoo emerge app-portage/cpuid2cpuflags
 
-  local -r CPU_FLAGS="$(to-gentoo cpuid2cpuflags | sed --expression='s/^CPU_FLAGS_X86: //')"
+  local -r CPU_FLAGS="$(to-gentoo cpuid2cpuflags | cut --delimiter=' ' --fields='2-')"
 
   to-gentoo sed --in-place --expression="s/^# \(CPU_FLAGS_X86=\)/\1\"${CPU_FLAGS}\"/" /etc/portage/make.conf
   to-gentoo emerge --update --deep --newuse @world
