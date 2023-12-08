@@ -19,7 +19,7 @@ EOF
 
 unalias -a
 
-to_gentoo() { chroot /mnt/gentoo "${@}"; }
+to-gentoo() { chroot /mnt/gentoo "${@}"; }
 
 BUILD_JOBS="$(("$(nproc)" + 1))" && readonly BUILD_JOBS
 LOAD_AVG="$(("${BUILD_JOBS}" * 2))" && readonly LOAD_AVG
@@ -94,17 +94,16 @@ portage_configration() {
     ;;
   esac
 
-  to_gentoo sed --in-place \
+  to-gentoo sed --in-place \
     --expression="s/^\(MAKEOPTS=\"\).*/\1--jobs=${BUILD_JOBS} --load-average=${LOAD_AVG}\"/" \
     --expression="s/^\(EMERGE_DEFAULT_OPTS=\"\).*/\1--jobs=${BUILD_JOBS} --load-average=${LOAD_AVG} --tree --verbose\"/" \
     --expression='s/^\(CPU_FLAGS_X86=\).*/# \1/' \
-    --expression='s/^\(USE=".*\) pulseaudio/\1/' /etc/portage/make.conf
+    --expression='s/^\(USE=".*\)pulseaudio /\1/' /etc/portage/make.conf
 
   if [[ "${GPU}" == 'amd' ]]; then
-    to_gentoo sed --in-place \
+    to-gentoo sed --in-place \
       --expression='s/^\(VIDEO_CARDS=\).*/\1"amdgpu radeonsi virtualbox"/' \
-      --expression='s/^\(USE=".*\)nvenc /\1/' \
-      --expression='s/^\(USE=".*\) nvidia/\1/' /etc/portage/make.conf
+      --expression='s/^\(USE=".*\)nvenc nvidia /\1/' /etc/portage/make.conf
   fi
 }
 
@@ -119,53 +118,52 @@ mounting() {
 }
 
 repository_update() {
-  to_gentoo emerge-webrsync
-  to_gentoo emaint sync --auto
-  to_gentoo eselect news read
+  to-gentoo emerge-webrsync
+  to-gentoo emaint sync --auto
+  to-gentoo eselect news read
 }
 
 profile_package_installation() {
-  FEATURES='-ccache' to_gentoo emerge dev-util/ccache
-  to_gentoo emerge app-portage/cpuid2cpuflags
+  FEATURES='-ccache' to-gentoo emerge dev-util/ccache
+  to-gentoo emerge app-portage/cpuid2cpuflags
 
-  [[ "${GPU}" == 'nvidia' ]] && to_gentoo emerge media-libs/nvidia-vaapi-driver
+  [[ "${GPU}" == 'nvidia' ]] && to-gentoo emerge media-libs/nvidia-vaapi-driver
 
-  local -r CPU_FLAGS="$(to_gentoo cpuid2cpuflags | sed --expression='s/^CPU_FLAGS_X86: //')"
+  local -r CPU_FLAGS="$(to-gentoo cpuid2cpuflags | sed --expression='s/^CPU_FLAGS_X86: //')"
 
-  to_gentoo sed --in-place --expression="s/^# \(CPU_FLAGS_X86=\)/\1\"${CPU_FLAGS}\"/" /etc/portage/make.conf
-  to_gentoo emerge --update --deep --newuse @world
-  to_gentoo emerge app-editors/neovim
-  to_gentoo emerge --depclean
+  to-gentoo sed --in-place --expression="s/^# \(CPU_FLAGS_X86=\)/\1\"${CPU_FLAGS}\"/" /etc/portage/make.conf
+  to-gentoo emerge --update --deep --newuse @world
+  to-gentoo emerge app-editors/neovim
+  to-gentoo emerge --depclean
 }
 
 localization() {
-  to_gentoo ln --symbolic --force /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
-  to_gentoo sed --in-place \
+  to-gentoo ln --symbolic --force /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
+  to-gentoo sed --in-place \
     --expression='s/^#\(en_US.UTF-8 UTF-8\)/\1/' \
     --expression='s/^#\(ja_JP.UTF-8 UTF-8\)/\1/' /etc/locale.gen
-  to_gentoo locale-gen
-  to_gentoo eselect locale set 4
+  to-gentoo locale-gen
+  to-gentoo eselect locale set 4
 
-  to_gentoo env-update
+  to-gentoo env-update
   # shellcheck disable=SC1091
   . /mnt/gentoo/etc/profile
 }
 
 kernel_installation() {
-  to_gentoo emerge sys-kernel/{linux-firmware,gentoo-sources,dracut}
+  to-gentoo emerge sys-kernel/{linux-firmware,gentoo-sources,dracut}
 
-  [[ "${CPU_INFO}" == 'Intel' ]] && to_gentoo emerge sys-firmware/intel-microcode
+  [[ "${CPU_INFO}" == 'Intel' ]] && to-gentoo emerge sys-firmware/intel-microcode
 
-  to_gentoo eselect kernel set 1
+  to-gentoo eselect kernel set 1
 
-  # cp -a "${SCRIPT_DIR}/kernel_conf" /mnt/gentoo/usr/src/linux/.config
-  # to_gentoo bash -c 'cd /usr/src/linux && make oldconfig && make menuconfig'
-  to_gentoo bash -c 'cd /usr/src/linux && make menuconfig'
-  to_gentoo bash -c "cd /usr/src/linux && make --jobs=${BUILD_JOBS} --load-average=${LOAD_AVG} && make modules_install; make install"
-  to_gentoo dracut --kver="$(uname --kernel-release | awk --field-separator='-' '{print $1}')-gentoo" --no-kernel
+  cp -a "${SCRIPT_DIR}/kernel_conf" /mnt/gentoo/usr/src/linux/.config
+  to-gentoo bash -c 'cd /usr/src/linux && make oldconfig && make menuconfig'
+  to-gentoo bash -c "cd /usr/src/linux && make --jobs=${BUILD_JOBS} --load-average=${LOAD_AVG} && make modules_install; make install"
+  to-gentoo dracut --no-kernel --kver="$(uname --kernel-release | awk --field-separator='-' '{print $1}')-gentoo"
 
-  to_gentoo emerge --update --deep --newuse @world
-  to_gentoo emerge --depclean
+  to-gentoo emerge --update --deep --newuse @world
+  to-gentoo emerge --depclean
 }
 
 fstab_configration() {
@@ -187,18 +185,18 @@ EOF
 }
 
 systemd_configration() {
-  to_gentoo systemd-machine-id-setup
-  to_gentoo systemd-firstboot --keymap='us'
-  to_gentoo systemctl preset-all
-  to_gentoo bootctl install
+  to-gentoo systemd-machine-id-setup
+  to-gentoo systemd-firstboot --keymap='us'
+  to-gentoo systemctl preset-all
+  to-gentoo bootctl install
 }
 
 user_setting() {
   local -r USER_NAME='remon'
 
-  to_gentoo useradd --create-home --groups='wheel' --shell='/bin/bash' "${USER_NAME}"
-  echo "${USER_NAME}:${USER_PASSWORD}" | to_gentoo chpasswd
-  echo "root:${ROOT_PASSWORD}" | to_gentoo chpasswd
+  to-gentoo useradd --create-home --groups='wheel' --shell='/bin/bash' "${USER_NAME}"
+  echo "${USER_NAME}:${USER_PASSWORD}" | to-gentoo chpasswd
+  echo "root:${ROOT_PASSWORD}" | to-gentoo chpasswd
 }
 
 others_configration() {
@@ -235,12 +233,12 @@ VDPAU_DRIVER='radeonsi'"
   # env
   echo "${ENVIRONMENT}" >> /mnt/gentoo/etc/environment
   # Time sync
-  to_gentoo sed --in-place \
+  to-gentoo sed --in-place \
     --expression='s/^#\(NTP=\)/\1ntp.nict.jp/' \
     --expression='s/^#\(FallbackNTP=\).*/\1ntp1.jst.mfeed.ad.jp ntp2.jst.mfeed.ad.jp ntp3.jst.mfeed.ad.jp/' /etc/systemd/timesyncd.conf
 
-  to_gentoo emerge app-admin/sudo
-  to_gentoo sed --expression='s/^# \(%wheel ALL=(ALL:ALL) ALL\)/\1/' /etc/sudoers | EDITOR='/usr/bin/tee' to_gentoo visudo &> /dev/null
+  to-gentoo emerge app-admin/sudo
+  to-gentoo sed --expression='s/^# \(%wheel ALL=(ALL:ALL) ALL\)/\1/' /etc/sudoers | EDITOR='/usr/bin/tee' to-gentoo visudo &> /dev/null
 
   rm --recursive --force /mnt/gentoo/stage3-*.tar.xz
 }

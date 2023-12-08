@@ -10,7 +10,7 @@ LOAD_AVG="$(("${BUILD_JOBS}" * 2))" && readonly LOAD_AVG
 SCRIPT_DIR="$(cd "$(dirname "${0}")" && pwd)" && readonly SCRIPT_DIR
 CPU_INFO="$(grep 'model name' /proc/cpuinfo | awk --field-separator='[ (]' 'NR==1 {print $3}')" && readonly CPU_INFO
 
-to_gentoo() { chroot /mnt/gentoo "${@}"; }
+to-gentoo() { chroot /mnt/gentoo "${@}"; }
 
 partitioning() {
   local -r EFI_PART_TYPE="$(sgdisk --list-types | grep 'ef00' | awk '{print $6,$7,$8}')"
@@ -54,14 +54,13 @@ portage_configration() {
     ;;
   esac
 
-  to_gentoo sed --in-place \
+  to-gentoo sed --in-place \
     --expression="s/^\(MAKEOPTS=\"\).*/\1--jobs=${BUILD_JOBS} --load-average=${LOAD_AVG}\"/" \
     --expression="s/^\(EMERGE_DEFAULT_OPTS=\"\).*/\1--jobs=${BUILD_JOBS} --load-average=${LOAD_AVG} --tree --verbose\"/" \
     --expression='s/^\(CPU_FLAGS_X86=\).*/# \1/' \
     --expression='s/^\(VIDEO_CARDS=\).*/\1"virtualbox"/' \
-    --expression='s/^\(USE=".*\) pulseaudio/\1/' \
-    --expression='s/^\(USE=".*\)nvenc /\1/' \
-    --expression='s/^\(USE=".*\)nvidia /\1/' /etc/portage/make.conf
+    --expression='s/^\(USE=".*\)pulseaudio /\1/' \
+    --expression='s/^\(USE=".*\)nvenc nvidia /\1/' /etc/portage/make.conf
 }
 
 mounting() {
@@ -75,50 +74,50 @@ mounting() {
 }
 
 repository_update() {
-  to_gentoo emerge-webrsync
-  to_gentoo emaint sync --auto
-  to_gentoo eselect news read
+  to-gentoo emerge-webrsync
+  to-gentoo emaint sync --auto
+  to-gentoo eselect news read
 }
 
 profile_package_installation() {
-  FEATURES='-ccache' to_gentoo emerge dev-util/ccache
-  to_gentoo emerge app-portage/cpuid2cpuflags
+  FEATURES='-ccache' to-gentoo emerge dev-util/ccache
+  to-gentoo emerge app-portage/cpuid2cpuflags
 
-  local -r CPU_FLAGS="$(to_gentoo cpuid2cpuflags | sed --expression='s/^CPU_FLAGS_X86: //')"
+  local -r CPU_FLAGS="$(to-gentoo cpuid2cpuflags | sed --expression='s/^CPU_FLAGS_X86: //')"
 
-  to_gentoo sed --in-place --expression="s/^# \(CPU_FLAGS_X86=\)/\1\"${CPU_FLAGS}\"/" /etc/portage/make.conf
-  to_gentoo emerge --update --deep --newuse @world
-  to_gentoo emerge app-editors/neovim
-  to_gentoo emerge --depclean
+  to-gentoo sed --in-place --expression="s/^# \(CPU_FLAGS_X86=\)/\1\"${CPU_FLAGS}\"/" /etc/portage/make.conf
+  to-gentoo emerge --update --deep --newuse @world
+  to-gentoo emerge app-editors/neovim
+  to-gentoo emerge --depclean
 }
 
 localization() {
-  to_gentoo ln --symbolic --force /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
-  to_gentoo sed --in-place \
+  to-gentoo ln --symbolic --force /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
+  to-gentoo sed --in-place \
     --expression='s/^#\(en_US.UTF-8 UTF-8\)/\1/' \
     --expression='s/^#\(ja_JP.UTF-8 UTF-8\)/\1/' /etc/locale.gen
-  to_gentoo locale-gen
-  to_gentoo eselect locale set 4
+  to-gentoo locale-gen
+  to-gentoo eselect locale set 4
 
-  to_gentoo env-update
+  to-gentoo env-update
   # shellcheck disable=SC1091
   . /mnt/gentoo/etc/profile
 }
 
 kernel_installation() {
-  to_gentoo emerge sys-kernel/{linux-firmware,gentoo-sources,dracut}
+  to-gentoo emerge sys-kernel/{linux-firmware,gentoo-sources,dracut}
 
-  [[ "${CPU_INFO}" == 'Intel' ]] && to_gentoo emerge sys-firmware/intel-microcode
+  [[ "${CPU_INFO}" == 'Intel' ]] && to-gentoo emerge sys-firmware/intel-microcode
 
-  to_gentoo eselect kernel set 1
+  to-gentoo eselect kernel set 1
 
   cp --archive "${SCRIPT_DIR}/kernel_conf" /mnt/gentoo/usr/src/linux/.config
-  to_gentoo bash -c 'cd /usr/src/linux && make oldconfig && make menuconfig'
-  to_gentoo bash -c "cd /usr/src/linux && make --jobs=${BUILD_JOBS} --load-average=${LOAD_AVG} && make modules_install; make install"
-  to_gentoo dracut --kver="$(uname --kernel-release | awk --field-separator='-' '{print $1}')-gentoo" --no-kernel
+  to-gentoo bash -c 'cd /usr/src/linux && make oldconfig && make menuconfig'
+  to-gentoo bash -c "cd /usr/src/linux && make --jobs=${BUILD_JOBS} --load-average=${LOAD_AVG} && make modules_install; make install"
+  to-gentoo dracut --no-kernel --kver="$(uname --kernel-release | awk --field-separator='-' '{print $1}')-gentoo"
 
-  to_gentoo emerge --update --deep --newuse @world
-  to_gentoo emerge --depclean
+  to-gentoo emerge --update --deep --newuse @world
+  to-gentoo emerge --depclean
 }
 
 fstab_configration() {
@@ -138,10 +137,10 @@ EOF
 }
 
 systemd_configration() {
-  to_gentoo systemd-machine-id-setup
-  to_gentoo systemd-firstboot --keymap='us'
-  to_gentoo systemctl preset-all
-  to_gentoo bootctl install
+  to-gentoo systemd-machine-id-setup
+  to-gentoo systemd-firstboot --keymap='us'
+  to-gentoo systemctl preset-all
+  to-gentoo bootctl install
 
   find_boot() { find /mnt/gentoo/boot -type 'f' -name "${1}"; }
 
@@ -176,9 +175,9 @@ EOF
 user_setting() {
   local -r USER_NAME='virt'
 
-  to_gentoo useradd --create-home --groups='wheel' --shell='/bin/bash' "${USER_NAME}"
-  echo "${USER_NAME}:virt" | to_gentoo chpasswd
-  echo 'root:root' | to_gentoo chpasswd
+  to-gentoo useradd --create-home --groups='wheel' --shell='/bin/bash' "${USER_NAME}"
+  echo "${USER_NAME}:virt" | to-gentoo chpasswd
+  echo 'root:root' | to-gentoo chpasswd
 }
 
 others_configration() {
@@ -195,12 +194,12 @@ DNS=8.8.4.4"
   echo 'virtualbox' > /mnt/gentoo/etc/hostname
   echo "${WIRED_NETWORK}" >> /mnt/gentoo/etc/systemd/network/20-wired.network
   # Time sync
-  to_gentoo sed --in-place \
+  to-gentoo sed --in-place \
     --expression='s/^#\(NTP=\)/\1ntp.nict.jp/' \
     --expression='s/^#\(FallbackNTP=\).*/\1ntp1.jst.mfeed.ad.jp ntp2.jst.mfeed.ad.jp ntp3.jst.mfeed.ad.jp/' /etc/systemd/timesyncd.conf
 
-  to_gentoo emerge app-admin/sudo
-  to_gentoo sed --expression='s/^# \(%wheel ALL=(ALL:ALL) ALL\)/\1/' /etc/sudoers | EDITOR='/usr/bin/tee' to_gentoo visudo &> /dev/null
+  to-gentoo emerge app-admin/sudo
+  to-gentoo sed --expression='s/^# \(%wheel ALL=(ALL:ALL) ALL\)/\1/' /etc/sudoers | EDITOR='/usr/bin/tee' to-gentoo visudo &> /dev/null
 
   rm --recursive --force /mnt/gentoo/stage3-*.tar.xz
 }
