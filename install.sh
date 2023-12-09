@@ -119,7 +119,7 @@ mounting() {
 
 repository_update() {
   to-gentoo emerge-webrsync
-  to-gentoo emaint sync --auto
+  to-gentoo emaint --auto sync
   to-gentoo eselect news read
 }
 
