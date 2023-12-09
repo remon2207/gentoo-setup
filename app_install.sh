@@ -16,7 +16,7 @@ pkgs_installation() {
     app-i18n/{fcitx{,-configtool,-gtk,-qt}:5,mozc} \
     app-misc/{ghq,jq,neofetch,ranger,tmux} \
     app-shells/{fzf,gentoo-zsh-completions,starship,zsh} \
-    app-text/tldr \
+    app-text/{tldr,highlight} \
     dev-util/{git-delta,github-cli,shellcheck,stylua,yamlfmt,shfmt} \
     dev-vcs/lazygit \
     media-fonts/{fontawesome,hack,nerd-fonts,noto{,-cjk,-emoji}} \
@@ -30,7 +30,7 @@ pkgs_installation() {
     sys-process/{htop,procs} \
     www-client/{vivaldi,w3m} \
     www-misc/profile-sync-daemon \
-    x11-apps/xrandr \
+    x11-apps/{xrandr,xev} \
     x11-base/xorg-server \
     x11-misc/{dunst,picom,polybar,qt5ct,rofi,xautolock,xdg-user-dirs} \
     x11-terms/{alacritty,kitty,wezterm} \
