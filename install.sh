@@ -215,7 +215,8 @@ QT_IM_MODULE='fcitx5'
 XMODIFIERS='@im=fcitx5'
 
 LIBVA_DRIVER_NAME='nvidia'
-VDPAU_DRIVER='nvidia'"
+VDPAU_DRIVER='nvidia'
+NVD_BACKEND='direct'"
     ;;
   'amd')
     local -r ENVIRONMENT="GTK_IM_MODULE='fcitx5'
