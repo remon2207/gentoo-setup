@@ -56,7 +56,7 @@ fstab_configration() {
 # ramdisk
 tmpfs /tmp               tmpfs rw,async,nodev,nosuid,noatime,size=2G,mode=1777                                   0 0
 tmpfs /var/tmp/portage   tmpfs rw,async,nodev,nosuid,noatime,size=8G                                             0 0
-tmpfs ${HOME}/.cache tmpfs rw,async,nodev,nosuid,noatime,nomand,lazytime,size=2G,mode=0755,uid=1000,gid=1000 0 0
+tmpfs ${HOME}/.cache tmpfs rw,async,nodev,nosuid,noatime,nomand,lazytime,size=1G,mode=0755,uid=1000,gid=1000 0 0
 tmpfs ${HOME}/tmp    tmpfs rw,async,nodev,nosuid,noatime,nomand,lazytime,size=1G,mode=0755,uid=1000,gid=1000 0 0
 EOF
   )"
