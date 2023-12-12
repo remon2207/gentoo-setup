@@ -175,7 +175,7 @@ fstab_configration() {
 
   local -r FSTAB="$(
     cat << EOF
-PARTUUID=${BOOT_PARTUUID} /boot vfat defaults,noatime,fmask=0077,dmask=0077 0 2
+PARTUUID=${BOOT_PARTUUID} /boot vfat defaults,noatime                       0 2
 PARTUUID=${ROOT_PARTUUID} /     ext4 defaults,noatime                       0 1
 PARTUUID=${HOME_PARTUUID} /home ext4 defaults,noatime                       0 2
 EOF
