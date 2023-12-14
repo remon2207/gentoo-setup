@@ -16,7 +16,7 @@ pkgs_installation() {
     app-i18n/{fcitx{,-configtool,-gtk,-qt}:5,mozc} \
     app-misc/{ghq,jq,neofetch,ranger,tmux} \
     app-shells/{fzf,gentoo-zsh-completions,starship,zsh} \
-    app-text/{tldr,highlight} \
+    app-text/{tldr,highlight,tree} \
     dev-util/{git-delta,github-cli,shellcheck,stylua,yamlfmt,shfmt} \
     dev-vcs/lazygit \
     media-fonts/{fontawesome,hack,nerd-fonts,noto{,-cjk,-emoji}} \
