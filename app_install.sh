@@ -18,7 +18,7 @@ pkgs_installation() {
     app-shells/{fzf,gentoo-zsh-completions,starship,zsh} \
     app-text/{tldr,highlight,tree} \
     dev-util/{git-delta,github-cli,shellcheck,stylua,yamlfmt,shfmt} \
-    dev-vcs/lazygit \
+    dev-vcs/{lazygit,rcs} \
     media-fonts/{fontawesome,hack,nerd-fonts,noto{,-cjk,-emoji}} \
     media-gfx/{feh,scrot,silicon} \
     net-fs/nfs-utils \
@@ -40,6 +40,12 @@ pkgs_installation() {
   sudo sed --in-place --expression='s/^USE="/&pulseaudio /' /etc/portage/make.conf
   sudo emerge --update --deep --newuse @world
   sudo emerge --depclean
+
+  sudo cp --archive /etc/dispatch-conf.conf{,.org}
+  sudo sed --in-place \
+    --expression='s/^\(use-rcs=\).*$/\1yes/' \
+    --expression="s/^\(diff=\"\).*\(\"\)$/\1delta --syntax-theme='Solarized (dark)' --line-numbers '%s' '%s'\2/" \
+    --expression="s/^\(pager=\"\).*\(\"\)$/\1bat --plain\2/" /etc/dispatch-conf.conf
 }
 
 group_configration() {
