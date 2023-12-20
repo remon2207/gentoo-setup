@@ -186,13 +186,17 @@ others_configration() {
 Name=${NET_INTERFACE}
 
 [Network]
-DHCP=yes
-DNS=8.8.8.8
-DNS=8.8.4.4"
+DHCP=yes"
+
+  local -r RESOLVED="[Resolve]
+DNS=8.8.8.8 8.8.4.4"
 
   # Network
+  mkdir /mnt/gentoo/etc/systemd/resolved.conf.d
+
   echo 'virtualbox' > /mnt/gentoo/etc/hostname
   echo "${WIRED_NETWORK}" >> /mnt/gentoo/etc/systemd/network/20-wired.network
+  echo "${RESOLVED}" > /mnt/gentoo/etc/systemd/resolved.conf.d/dns_servers.conf
   # Time sync
   to-gentoo sed --in-place \
     --expression='s/^#\(NTP=\)/\1ntp.nict.jp/' \

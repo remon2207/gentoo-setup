@@ -205,8 +205,13 @@ others_configration() {
 Name=${NET_INTERFACE}
 
 [Network]
-DHCP=yes
+DHCP=yes"
+
+  local -r RESOLVED="[Resolve]
 DNS=192.168.1.202"
+
+  local -r RESOLVED_FALLBACK="[Resolve]
+FallbackDNS=8.8.8.8 8.8.4.4 2001:4860:4860::8888 2001:4860:4860::8844"
 
   case "${GPU}" in
   'nvidia')
@@ -229,8 +234,12 @@ VDPAU_DRIVER='radeonsi'"
   esac
 
   # Network
+  mkdir /mnt/gentoo/etc/systemd/resolved.conf.d
+
   echo 'gentoo' > /mnt/gentoo/etc/hostname
   echo "${WIRED_NETWORK}" >> /mnt/gentoo/etc/systemd/network/20-wired.network
+  echo "${RESOLVED}" > /mnt/gentoo/etc/systemd/resolved.conf.d/dns_servers.conf
+  echo "${RESOLVED_FALLBACK}" > /mnt/gentoo/etc/systemd/resolved.conf.d/fallback_dns.conf
   # env
   echo "${ENVIRONMENT}" >> /mnt/gentoo/etc/environment
   # Time sync
