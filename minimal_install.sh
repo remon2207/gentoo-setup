@@ -6,7 +6,7 @@ unalias -a
 
 readonly DISK='/dev/sda'
 BUILD_JOBS="$(("$(nproc)" + 1))" && readonly BUILD_JOBS
-LOAD_AVG="$(("${BUILD_JOBS}" * 2))" && readonly LOAD_AVG
+LOAD_AVG="$(("${BUILD_JOBS}" * 2)).0" && readonly LOAD_AVG
 SCRIPT_DIR="$(cd "$(dirname "${0}")" && pwd)" && readonly SCRIPT_DIR
 CPU_INFO="$(grep 'model name' /proc/cpuinfo | awk --field-separator='[ (]' 'NR==1 {print $3}')" && readonly CPU_INFO
 
@@ -112,8 +112,8 @@ kernel_installation() {
   to-gentoo eselect kernel set 1
 
   cp --archive "${SCRIPT_DIR}/kernel_conf" /mnt/gentoo/usr/src/linux/.config
-  to-gentoo bash -c 'cd /usr/src/linux && make oldconfig && make menuconfig'
-  to-gentoo bash -c "cd /usr/src/linux && make --jobs=${BUILD_JOBS} --load-average=${LOAD_AVG} && make modules_install; make install"
+  to-gentoo sh -c 'cd /usr/src/linux && make oldconfig && make menuconfig'
+  to-gentoo sh -c "cd /usr/src/linux && make --jobs=${BUILD_JOBS} --load-average=${LOAD_AVG} && make modules_install; make install"
   to-gentoo dracut --no-kernel --kver="$(uname --kernel-release | awk --field-separator='-' '{print $1}')-gentoo"
 
   to-gentoo emerge --update --deep --newuse @world
