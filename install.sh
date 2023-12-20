@@ -211,7 +211,7 @@ DHCP=yes"
 DNS=192.168.1.202"
 
   local -r RESOLVED_FALLBACK="[Resolve]
-FallbackDNS=8.8.8.8 8.8.4.4 2001:4860:4860::8888 2001:4860:4860::8844"
+FallbackDNS=2001:4860:4860::8888 2001:4860:4860::8844 8.8.8.8 8.8.4.4"
 
   case "${GPU}" in
   'nvidia')

@@ -189,7 +189,7 @@ Name=${NET_INTERFACE}
 DHCP=yes"
 
   local -r RESOLVED="[Resolve]
-DNS=8.8.8.8 8.8.4.4"
+DNS=2001:4860:4860::8888 2001:4860:4860::8844"
 
   # Network
   mkdir /mnt/gentoo/etc/systemd/resolved.conf.d
