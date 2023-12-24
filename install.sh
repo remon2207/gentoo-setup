@@ -28,34 +28,34 @@ CPU_INFO="$(grep 'model name' /proc/cpuinfo | awk --field-separator='[ (]' 'NR==
 
 while getopts 'd:g:u:r:h' opt; do
   case "${opt}" in
-  'd')
-    readonly DISK="${OPTARG}"
-    ;;
-  'g')
-    readonly GPU="${OPTARG}"
-    ;;
-  'u')
-    readonly USER_PASSWORD="${OPTARG}"
-    ;;
-  'r')
-    readonly ROOT_PASSWORD="${OPTARG}"
-    ;;
-  'h')
-    usage && exit 0
-    ;;
-  *)
-    usage && exit 1
-    ;;
+    'd')
+      readonly DISK="${OPTARG}"
+      ;;
+    'g')
+      readonly GPU="${OPTARG}"
+      ;;
+    'u')
+      readonly USER_PASSWORD="${OPTARG}"
+      ;;
+    'r')
+      readonly ROOT_PASSWORD="${OPTARG}"
+      ;;
+    'h')
+      usage && exit 0
+      ;;
+    *)
+      usage && exit 1
+      ;;
   esac
 done
 
 check_variables() {
   case "${GPU}" in
-  'nvidia') ;;
-  'amd') ;;
-  *)
-    echo -e '\e[31mgpu typo\e[m' && exit 1
-    ;;
+    'nvidia') ;;
+    'amd') ;;
+    *)
+      echo -e '\e[31mgpu typo\e[m' && exit 1
+      ;;
   esac
 }
 
@@ -84,14 +84,14 @@ portage_configration() {
   cp --dereference /etc/resolv.conf /mnt/gentoo/etc
 
   case "${CPU_INFO}" in
-  'Intel')
-    echo 'sys-firmware/intel-microcode initramfs' > /mnt/gentoo/etc/portage/package.use/intel-microcode
-    rm --recursive --force /mnt/gentoo/etc/portage/package.use/linux-firmware
-    ;;
-  'AMD')
-    echo 'sys-kernel/linux-firmware initramfs' > /mnt/gentoo/etc/portage/package.use/linux-firmware
-    rm --recursive --force /mnt/gentoo/etc/portage/package.use/intel-microcode
-    ;;
+    'Intel')
+      echo 'sys-firmware/intel-microcode initramfs' > /mnt/gentoo/etc/portage/package.use/intel-microcode
+      rm --recursive --force /mnt/gentoo/etc/portage/package.use/linux-firmware
+      ;;
+    'AMD')
+      echo 'sys-kernel/linux-firmware initramfs' > /mnt/gentoo/etc/portage/package.use/linux-firmware
+      rm --recursive --force /mnt/gentoo/etc/portage/package.use/intel-microcode
+      ;;
   esac
 
   to-gentoo sed --in-place \
@@ -214,23 +214,23 @@ DNS=192.168.1.202"
 FallbackDNS=2001:4860:4860::8888 2001:4860:4860::8844 8.8.8.8 8.8.4.4"
 
   case "${GPU}" in
-  'nvidia')
-    local -r ENVIRONMENT="GTK_IM_MODULE='fcitx5'
+    'nvidia')
+      local -r ENVIRONMENT="GTK_IM_MODULE='fcitx5'
 QT_IM_MODULE='fcitx5'
 XMODIFIERS='@im=fcitx5'
 
 LIBVA_DRIVER_NAME='nvidia'
 VDPAU_DRIVER='nvidia'
 NVD_BACKEND='direct'"
-    ;;
-  'amd')
-    local -r ENVIRONMENT="GTK_IM_MODULE='fcitx5'
+      ;;
+    'amd')
+      local -r ENVIRONMENT="GTK_IM_MODULE='fcitx5'
 QT_IM_MODULE='fcitx5'
 XMODIFIERS='@im=fcitx5'
 
 LIBVA_DRIVER_NAME='radeonsi'
 VDPAU_DRIVER='radeonsi'"
-    ;;
+      ;;
   esac
 
   # Network

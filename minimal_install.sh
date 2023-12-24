@@ -44,14 +44,14 @@ portage_configration() {
   cp --dereference /etc/resolv.conf /mnt/gentoo/etc
 
   case "${CPU_INFO}" in
-  'Intel')
-    echo 'sys-firmware/intel-microcode initramfs' > /mnt/gentoo/etc/portage/package.use/intel-microcode
-    rm --recursive --force /mnt/gentoo/etc/portage/package.use/linux-firmware
-    ;;
-  'AMD')
-    echo 'sys-kernel/linux-firmware initramfs' > /mnt/gentoo/etc/portage/package.use/linux-firmware
-    rm --recursive --force /mnt/gentoo/etc/portage/package.use/intel-microcode
-    ;;
+    'Intel')
+      echo 'sys-firmware/intel-microcode initramfs' > /mnt/gentoo/etc/portage/package.use/intel-microcode
+      rm --recursive --force /mnt/gentoo/etc/portage/package.use/linux-firmware
+      ;;
+    'AMD')
+      echo 'sys-kernel/linux-firmware initramfs' > /mnt/gentoo/etc/portage/package.use/linux-firmware
+      rm --recursive --force /mnt/gentoo/etc/portage/package.use/intel-microcode
+      ;;
   esac
 
   to-gentoo sed --in-place \
