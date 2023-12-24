@@ -69,7 +69,9 @@ partitioning() {
 
 tarball_extract() {
   local -r TARBALL_DIR='https://distfiles.gentoo.org/releases/amd64/autobuilds/current-stage3-amd64-systemd'
-  local -r STAGE_FILE="$(curl --fail --silent --show-error --location "${TARBALL_DIR}" | grep 'tar.xz"' | awk --field-separator='"' '{print $8}')"
+  local -r STAGE_FILE="$(curl --fail --silent --show-error --location "${TARBALL_DIR}" \
+    | grep 'tar.xz"' \
+    | awk --field-separator='"' '{print $8}')"
 
   cd /mnt/gentoo
   curl --fail --silent --show-error --remote-name --location "${TARBALL_DIR}/${STAGE_FILE}"

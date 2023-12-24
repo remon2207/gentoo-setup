@@ -13,8 +13,12 @@ CPU_INFO="$(grep 'model name' /proc/cpuinfo | awk --field-separator='[ (]' 'NR==
 to-gentoo() { chroot /mnt/gentoo "${@}"; }
 
 partitioning() {
-  local -r EFI_PART_TYPE="$(sgdisk --list-types | grep 'ef00' | awk '{print $6,$7,$8}')"
-  local -r NORMAL_PART_TYPE="$(sgdisk --list-types | grep '8300' | awk '{print $2,$3}')"
+  local -r EFI_PART_TYPE="$(sgdisk --list-types \
+    | grep 'ef00' \
+    | awk '{print $6,$7,$8}')"
+  local -r NORMAL_PART_TYPE="$(sgdisk --list-types \
+    | grep '8300' \
+    | awk '{print $2,$3}')"
 
   sgdisk --zap-all "${DISK}"
   sgdisk --new='0::+512M' --typecode='0:ef00' --change-name="0:${EFI_PART_TYPE}" "${DISK}"
@@ -29,7 +33,9 @@ partitioning() {
 
 tarball_extract() {
   local -r TARBALL_DIR='https://distfiles.gentoo.org/releases/amd64/autobuilds/current-stage3-amd64-systemd'
-  local -r STAGE_FILE="$(curl --fail --silent --show-error --location "${TARBALL_DIR}" | grep 'tar.xz"' | awk --field-separator='"' '{print $8}')"
+  local -r STAGE_FILE="$(curl --fail --silent --show-error --location "${TARBALL_DIR}" \
+    | grep 'tar.xz"' \
+    | awk --field-separator='"' '{print $8}')"
 
   cd /mnt/gentoo
   curl --fail --silent --show-error --remote-name --location "${TARBALL_DIR}/${STAGE_FILE}"
