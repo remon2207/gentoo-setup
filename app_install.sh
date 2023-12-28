@@ -27,7 +27,7 @@ pkgs_installation() {
     sys-apps/{bat,fd,lsd,pciutils,ripgrep,sd} \
     sys-auth/authy \
     sys-fs/duf \
-    sys-process/{htop,procs} \
+    sys-process/{{b,h}top,procs} \
     www-client/{vivaldi,w3m} \
     www-misc/profile-sync-daemon \
     x11-apps/{xrandr,xev} \
