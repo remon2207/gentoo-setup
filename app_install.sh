@@ -36,6 +36,7 @@ pkgs_installation() {
     x11-terms/{alacritty,kitty,wezterm} \
     x11-themes/{arc-theme,breezex-xcursors,kvantum,papirus-icon-theme} \
     x11-wm/i3
+  sudo emerge --ask --oneshot virtual/jre
 
   sudo sed --in-place --expression='s/^USE="/&pulseaudio /' /etc/portage/make.conf
   sudo emerge --update --deep --newuse @world
